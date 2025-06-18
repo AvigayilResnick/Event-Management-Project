@@ -27,8 +27,8 @@ CREATE TABLE supplier_profiles (
   business_name VARCHAR(100),
   category VARCHAR(50),
   description TEXT,
-  price_min INT NULL,       -- מחיר מינימום (מספר)
-  price_max INT NULL,       -- מחיר מקסימום (מספר)
+   price_min INT,
+   price_max INT,
   city VARCHAR(50),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -75,3 +75,31 @@ CREATE TABLE images (
   image_url VARCHAR(255) NOT NULL,
   FOREIGN KEY (supplier_id) REFERENCES supplier_profiles(id) ON DELETE CASCADE
 );
+INSERT INTO users (full_name, email, phone, role)
+VALUES 
+('Gal Cohen', 'gal.cohen@example.com', '0501111111', 'supplier'),
+('Maya Levi', 'maya.levi@example.com', '0502222222', 'supplier'),
+('Ori Kaplan', 'ori.kaplan@example.com', '0503333333', 'supplier');
+
+INSERT INTO passwords (user_id, password_hash)
+VALUES
+(1, '$2b$10$y8EY.gjH6hDZng2dqPEqle7lDc6NNBQqkMYMraH1X4BZ1Q8/kCn6C'), -- password123
+(2, '$2b$10$y8EY.gjH6hDZng2dqPEqle7lDc6NNBQqkMYMraH1X4BZ1Q8/kCn6C'),
+(3, '$2b$10$y8EY.gjH6hDZng2dqPEqle7lDc6NNBQqkMYMraH1X4BZ1Q8/kCn6C');
+
+INSERT INTO supplier_profiles (user_id, business_name, category, description, price_range, city)
+VALUES
+(1, 'Gal Photography', 'Photographer', 'Experienced wedding photographer', '$2000-$5000', 'Tel Aviv'),
+(2, 'Maya Catering', 'Caterer', 'Delicious kosher catering', '$5000-$15000', 'Jerusalem'),
+(3, 'Ori DJ Services', 'DJ', 'Professional DJ for events', '$1000-$3000', 'Haifa');
+
+INSERT INTO events (name)
+VALUES ('Wedding'), ('Bar Mitzvah'), ('Corporate Event');
+INSERT INTO supplier_event_types (supplier_id, event_id)
+VALUES
+(1, 1), -- Gal Photography - Wedding
+(2, 1), -- Maya Catering - Wedding
+(2, 2), -- Maya Catering - Bar Mitzvah
+(3, 1), -- Ori DJ - Wedding
+(3, 3); -- Ori DJ - Corporate Event
+
