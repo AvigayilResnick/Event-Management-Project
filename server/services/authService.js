@@ -4,13 +4,13 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
 
-export const signup = async ({ full_name, email, password, role = 'client' }) => {
+export const signup = async ({ full_name, email, phone, password, role = 'client' }) => {
   const [[existing]] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
   if (existing) throw new Error('Email already in use');
 
   const [result] = await db.query(
-    'INSERT INTO users (full_name, email, role) VALUES (?, ?, ?)',
-    [full_name, email, role]
+    'INSERT INTO users (full_name, email,phone, role) VALUES (?, ?, ?, ?)',
+    [full_name, email, phone, role]
   );
   const userId = result.insertId;
 
@@ -28,6 +28,7 @@ export const signup = async ({ full_name, email, password, role = 'client' }) =>
       id: userId,
       full_name,
       email,
+      phone,
       role
     }
   };

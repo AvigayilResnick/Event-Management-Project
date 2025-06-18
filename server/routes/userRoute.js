@@ -1,12 +1,13 @@
 import express from 'express';
-import { getUser, updateUser } from '../controllers/userController.js';
+import { getUserProfile, updateUserProfile ,changePasswordController} from '../controllers/userController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
-import { authorizeAdmin, authorizeUserOrAdmin } from '../middleware/roleMiddleware.js';
+import { authorizeAdmin,authorizeUser, authorizeUserOrAdmin } from '../middleware/roleMiddleware.js';
 
 const router = express.Router();
 // User route for getting and updating user profiles
-router.get('/:id', authMiddleware, authorizeUserOrAdmin, getUser);
-router.put('/:id', authMiddleware, authorizeUserOrAdmin, updateUser);
+router.get('/:id', authMiddleware, authorizeUserOrAdmin, getUserProfile);
+router.put('/:id', authMiddleware, authorizeUserOrAdmin, updateUserProfile);
+router.post('/change-password', authMiddleware, authorizeUser, changePasswordController);
 
 
 

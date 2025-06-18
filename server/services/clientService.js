@@ -5,33 +5,77 @@ import nodemailer from 'nodemailer';
 // Get suppliers filtered by search criteria (optional)
 export async function getSuppliersForHome({
   eventName = null,
+  city = null,
+  priceMin = null,
+  priceMax = null,
+  search = null,               // חיפוש חופשי
+  sortBy = 'price_min',        // הערכים המותרים: 'price_min', 'price_max', 'business_name', 'city', 'average_price'
+  sortOrder = 'asc',
   limit = 20,
   offset = 0
 }) {
+  const allowedSortBy = ['price_min', 'price_max', 'business_name', 'city', 'average_price'];
+  const allowedSortOrder = ['asc', 'desc'];
+
+  if (!allowedSortBy.includes(sortBy)) sortBy = 'price_min';
+  if (!allowedSortOrder.includes(sortOrder.toLowerCase())) sortOrder = 'asc';
+
   const params = [];
-  let query = `
+    let query = `
     SELECT sp.id, sp.business_name,
            LEFT(sp.description, 120) AS short_description
     FROM supplier_profiles sp
     JOIN supplier_event_types setp ON sp.id = setp.supplier_id
     JOIN events e ON e.id = setp.event_id
-    WHERE 1 = 1
+    WHERE 1=1
   `;
 
-  // סינון לפי סוג אירוע אם קיים
   if (eventName) {
     query += ' AND e.name = ?';
     params.push(eventName);
   }
 
-  query += ' LIMIT ? OFFSET ?';
+  if (city) {
+    query += ' AND sp.city = ?';
+    params.push(city);
+  }
+
+if (priceMin !== null && priceMax !== null) {
+    query += ' AND sp.price_max >= ? AND sp.price_min <= ?';
+    params.push(priceMin, priceMax);
+  } else if (priceMin !== null) {
+    query += ' AND sp.price_max >= ?';
+    params.push(priceMin);
+  } else if (priceMax !== null) {
+    query += ' AND sp.price_min <= ?';
+    params.push(priceMax);
+  }
+
+  if (search) {
+    query += ' AND (sp.business_name LIKE ? OR sp.description LIKE ?)';
+    params.push(`%${search}%`, `%${search}%`);
+  }
+
+  query += ` GROUP BY sp.id `;
+
+  if (sortBy === 'average_price') {
+    query += ` ORDER BY (sp.price_min + sp.price_max) / 2 ${sortOrder.toUpperCase()} `;
+  } else {
+    query += ` ORDER BY sp.${sortBy} ${sortOrder.toUpperCase()} `;
+  }
+
+  query += ` LIMIT ? OFFSET ? `;
   params.push(limit, offset);
 
   const [suppliers] = await db.query(query, params);
   return suppliers;
 }
 
-async function getSupplierBasicInfo(supplierId) {
+
+
+
+
+export async function getSupplierBasicInfo(supplierId) {
   const [[supplier]] = await db.query(
     `SELECT sp.*, u.full_name, u.email
      FROM supplier_profiles sp
@@ -42,7 +86,7 @@ async function getSupplierBasicInfo(supplierId) {
   return supplier || null;
 }
 
-async function getSupplierImages(supplierId) {
+export async function getSupplierImages(supplierId) {
   const [images] = await db.query(
     `SELECT image_url FROM images WHERE supplier_id = ?`,
     [supplierId]
@@ -50,7 +94,7 @@ async function getSupplierImages(supplierId) {
   return images.map(img => img.image_url);
 }
 
-async function getSupplierEvents(supplierId) {
+export async function getSupplierEvents(supplierId) {
   const [events] = await db.query(
     `SELECT e.name FROM events e
      JOIN supplier_event_types setp ON e.id = setp.event_id
@@ -61,7 +105,7 @@ async function getSupplierEvents(supplierId) {
 }
 
 // פונקציה ראשית שמשלבת את כולם
-async function getSupplierDetails(supplierId) {
+export async function getSupplierDetails(supplierId) {
   const supplier = await getSupplierBasicInfo(supplierId);
   if (!supplier) return null;
 
@@ -75,6 +119,31 @@ async function getSupplierDetails(supplierId) {
   };
 }
 
+export async function requestSupplier(userId) {
+  // 1. בדיקה אם הוא כבר ספק
+  const [[user]] = await db.query('SELECT role FROM users WHERE id = ?', [userId]);
+  if (!user) return { success: false, message: 'User not found' };
+  if (user.role === 'supplier') {
+    return { success: false, message: 'You are already a supplier' };
+  }
+
+  // 2. בדיקה אם יש בקשה קיימת
+  const [[existingRequest]] = await db.query(
+    'SELECT * FROM supplier_requests WHERE user_id = ? AND status = "pending"',
+    [userId]
+  );
+  if (existingRequest) {
+    return { success: false, message: 'You already submitted a request' };
+  }
+
+  // 3. יצירת בקשה חדשה
+  await db.query(
+    'INSERT INTO supplier_requests (user_id) VALUES (?)',
+    [userId]
+  );
+
+  return { success: true };
+}
 // const transporter = nodemailer.createTransport({
 //   host: 'smtp.example.com',   // למשל smtp.gmail.com
 //   port: 587,

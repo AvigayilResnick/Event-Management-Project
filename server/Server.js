@@ -1,6 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoute.js';
+import clientRoutes from './routes/clientRoute.js';
+import userRoutes from './routes/userRoute.js';
+
+import pool from './db/dbConnection.js'; // Adjust the path as necessary
 
 const app = express();
 
@@ -24,7 +28,8 @@ app.get('/', (req, res) => {
   });
 
   app.use('/api/auth', authRoutes);
-
+  app.use('/api/client', clientRoutes);
+app.use('/api/users', userRoutes);
 
 // Start the server on a specified port or default to 5000
 const PORT = process.env.PORT || 5000;

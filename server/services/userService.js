@@ -19,4 +19,15 @@ export const updateUserProfile = async (id, data) => {
   return result.affectedRows > 0;
 };
 
-// פונקציות נוספות לניהול משתמשים
+export const changePasswordService = async (userId, currentPassword, newPassword) => {
+  const user = await getUserById(userId);
+  if (!user) throw new Error('User not found');
+
+  const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!isMatch) throw new Error('Current password incorrect');
+
+  const newHash = await bcrypt.hash(newPassword, 10);
+
+  const result = await updateUserPassword(userId, newHash);
+  return result;
+};

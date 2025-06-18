@@ -26,3 +26,23 @@ export const updateUserProfile = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };      
+export const changePasswordController = async (req, res) => {
+  try {
+    const userId = req.user.id; // מ־middleware האותנטיקציה
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Missing passwords' });
+    }
+
+    const success = await changePasswordService(userId, currentPassword, newPassword);
+
+    if (success) {
+      res.json({ message: 'Password changed successfully' });
+    } else {
+      res.status(400).json({ message: 'Password change failed' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
