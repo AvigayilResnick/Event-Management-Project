@@ -27,7 +27,8 @@ CREATE TABLE supplier_profiles (
   business_name VARCHAR(100),
   category VARCHAR(50),
   description TEXT,
-  price_range VARCHAR(50),
+  price_min INT NULL,       -- מחיר מינימום (מספר)
+  price_max INT NULL,       -- מחיר מקסימום (מספר)
   city VARCHAR(50),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
