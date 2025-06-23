@@ -16,11 +16,16 @@ export async function getSuppliers(req, res) {
       offset = 0
     } = req.query;
 
+const priceMinParsed = (typeof priceMin === 'string' && priceMin.trim() !== '') ? Number(priceMin) : null;
+const priceMaxParsed = (typeof priceMax === 'string' && priceMax.trim() !== '') ? Number(priceMax) : null;
+
+
+
     const suppliers = await clientService.getSuppliersForHome({
       eventName,
       city,
-      priceMin: priceMin !== null ? parseInt(priceMin) : null,
-      priceMax: priceMax !== null ? parseInt(priceMax) : null,
+      priceMin: priceMinParsed,
+      priceMax: priceMaxParsed,
       search,
       sortBy,
       sortOrder,
@@ -28,6 +33,7 @@ export async function getSuppliers(req, res) {
       offset: parseInt(offset),
     });
 
+    console.log("Found suppliers:", suppliers.length);
     res.json(suppliers);
   } catch (error) {
     console.error('Error fetching suppliers:', error);
@@ -36,6 +42,15 @@ export async function getSuppliers(req, res) {
 }
 
 
+export async function getAllEvents(req, res) {
+  try {
+    const events = await clientService.getAllEvents();
+    res.json(events);
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
 // קבלת פרטי ספק לפי מזהה
 export async function getSupplierDetails(req, res) {
   try {
@@ -66,6 +81,7 @@ export async function sendContactMessage(req, res) {
     res.status(500).json({ message: 'Failed to send message' });
   }
 }
+
 // קבלת פרטי ספק מלאים כולל תמונות ואירועים
 export async function getSupplierFullDetails(req, res) {
   try {

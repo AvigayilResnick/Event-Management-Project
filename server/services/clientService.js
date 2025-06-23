@@ -8,20 +8,13 @@ export async function getSuppliersForHome({
   city = null,
   priceMin = null,
   priceMax = null,
-  search = null,               // חיפוש חופשי
-  sortBy = 'price_min',        // הערכים המותרים: 'price_min', 'price_max', 'business_name', 'city', 'average_price'
+  search = null,
+  sortBy = 'price_min',
   sortOrder = 'asc',
   limit = 20,
   offset = 0
 }) {
-  const allowedSortBy = ['price_min', 'price_max', 'business_name', 'city', 'average_price'];
-  const allowedSortOrder = ['asc', 'desc'];
-
-  if (!allowedSortBy.includes(sortBy)) sortBy = 'price_min';
-  if (!allowedSortOrder.includes(sortOrder.toLowerCase())) sortOrder = 'asc';
-
-  const params = [];
-    let query = `
+  let query = `
     SELECT sp.id, sp.business_name,
            LEFT(sp.description, 120) AS short_description
     FROM supplier_profiles sp
@@ -29,6 +22,7 @@ export async function getSuppliersForHome({
     JOIN events e ON e.id = setp.event_id
     WHERE 1=1
   `;
+  const params = [];
 
   if (eventName) {
     query += ' AND e.name = ?';
@@ -40,15 +34,15 @@ export async function getSuppliersForHome({
     params.push(city);
   }
 
-if (priceMin !== null && priceMax !== null) {
+  if (
+  typeof priceMin === "number" &&
+  typeof priceMax === "number" &&
+  !isNaN(priceMin) &&
+  !isNaN(priceMax)
+) 
+{
     query += ' AND sp.price_max >= ? AND sp.price_min <= ?';
     params.push(priceMin, priceMax);
-  } else if (priceMin !== null) {
-    query += ' AND sp.price_max >= ?';
-    params.push(priceMin);
-  } else if (priceMax !== null) {
-    query += ' AND sp.price_min <= ?';
-    params.push(priceMax);
   }
 
   if (search) {
@@ -56,24 +50,32 @@ if (priceMin !== null && priceMax !== null) {
     params.push(`%${search}%`, `%${search}%`);
   }
 
-  query += ` GROUP BY sp.id `;
+  query += ' GROUP BY sp.id ';
 
   if (sortBy === 'average_price') {
-    query += ` ORDER BY (sp.price_min + sp.price_max) / 2 ${sortOrder.toUpperCase()} `;
+    query += ` ORDER BY (sp.price_min + sp.price_max) / 2 ${sortOrder.toUpperCase()}`;
   } else {
-    query += ` ORDER BY sp.${sortBy} ${sortOrder.toUpperCase()} `;
+    query += ` ORDER BY sp.${sortBy} ${sortOrder.toUpperCase()}`;
   }
 
-  query += ` LIMIT ? OFFSET ? `;
+  query += ' LIMIT ? OFFSET ?';
   params.push(limit, offset);
 
-  const [suppliers] = await db.query(query, params);
-  return suppliers;
+  console.log("Final SQL:", query);
+  console.log("Params:", params);
+
+  const [rows] = await db.query(query, params);
+  return rows;
 }
 
 
 
 
+export async function getAllEvents() {
+const [events] = await db.query('SELECT DISTINCT name FROM events ORDER BY name ASC');
+return events.map(e => e.name);
+
+}
 
 export async function getSupplierBasicInfo(supplierId) {
   const [[supplier]] = await db.query(

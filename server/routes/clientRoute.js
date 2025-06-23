@@ -5,12 +5,12 @@ import {
   getSuppliers,
   getSupplierFullDetails,
   sendContactMessage,
-  requestSupplier
+  requestSupplier,getAllEvents
 } from '../controllers/clientController.js';
-console.log('Client routes loaded');
+
 
 const router = express.Router();
-
+router.get('/events', getAllEvents);
 // GET /api/client/suppliers?eventName=...&limit=...&offset=...
 router.get('/suppliers', getSuppliers);
 
