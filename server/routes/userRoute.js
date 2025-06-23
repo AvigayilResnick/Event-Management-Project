@@ -7,7 +7,7 @@ const router = express.Router();
 // User route for getting and updating user profiles
 router.get('/:id', authMiddleware, authorizeUserOrAdmin, getUserProfile);
 router.put('/:id', authMiddleware, authorizeUserOrAdmin, updateUserProfile);
-router.post('/change-password', authMiddleware, authorizeUser, changePasswordController);
+router.post('/change-password', authMiddleware, changePasswordController);
 
 
 

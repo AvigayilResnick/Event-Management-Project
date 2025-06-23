@@ -30,12 +30,12 @@ export const changePasswordController = async (req, res) => {
   try {
     const userId = req.user.id; // מ־middleware האותנטיקציה
     const { currentPassword, newPassword } = req.body;
-
+ console.log('userId:', userId, 'currentPassword:', currentPassword, 'newPassword:', newPassword);
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: 'Missing passwords' });
     }
 
-    const success = await changePasswordService(userId, currentPassword, newPassword);
+    const success = await userService.changePasswordService(userId, currentPassword, newPassword);
 
     if (success) {
       res.json({ message: 'Password changed successfully' });

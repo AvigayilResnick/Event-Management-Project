@@ -10,3 +10,32 @@ export const loginValidationRules = [
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').notEmpty().withMessage('Password is required')
 ];
+
+
+
+
+
+export const messageValidationRules = () => [
+  body('toUserId')
+    .notEmpty()
+    .withMessage('Recipient ID is required')
+    .toInt()                       // המרה למספר
+    .isInt({ gt: 0 })
+    .withMessage('Recipient ID must be a positive integer'),
+
+  body('messageText')
+    .trim()
+    .notEmpty()
+    .withMessage('Message text is required')
+    .isLength({ max: 1000 })
+    .withMessage('Message text max length is 1000 characters'),
+];
+
+export const productValidationRules = [
+  body('name').trim().notEmpty().withMessage('Product name is required'),
+  body('price').isNumeric().withMessage('Price must be a number'),
+  body('description').trim().notEmpty().withMessage('Description is required'),
+  body('category').trim().notEmpty().withMessage('Category is required'),
+  body('image').optional().isURL().withMessage('Image URL must be valid')
+];
+

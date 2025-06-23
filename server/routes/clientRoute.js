@@ -17,10 +17,9 @@ router.get('/suppliers', getSuppliers);
 // GET /api/client/suppliers/full/:id
 router.get('/suppliers/full/:id', authMiddleware, getSupplierFullDetails);
 
-// POST /api/client/contact
-router.post('/contact', authMiddleware, sendContactMessage);
 
-router.post('/request-supplier', authMiddleware, authorizeClientOnly, requestSupplier);
+
+
 
 
 

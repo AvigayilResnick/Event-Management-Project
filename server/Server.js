@@ -6,6 +6,7 @@ import clientRoutes from './routes/clientRoute.js';
 import userRoutes from './routes/userRoute.js';
 import roleRequestRoutes from './routes/roleRequestRoute.js';
 import supplierRoutes from './routes/supplierRoute.js';
+import messageRoutes from './routes/messageRoute.js'; // Uncomment if you have message routes
 
 const app = express();
 
@@ -27,13 +28,18 @@ app.get('/test-db', async (req, res) => {
 app.get('/', (req, res) => {
     res.send('Hello World!');
   });
+app.use((req, res, next) => {
+  console.log('Incoming request:', req.method, req.url);
+  next();
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/client', clientRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRequestRoutes);
 app.use('/api/suppliers', supplierRoutes);
-
+app.use('/api/messages', messageRoutes); // Uncomment if you have message routes
+// Error handling middleware
 
 // Start the server on a specified port or default to 5000
 const PORT = process.env.PORT || 5000;

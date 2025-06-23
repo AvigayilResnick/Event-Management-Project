@@ -1,4 +1,4 @@
-import db from '../db/dbConnection'
+import db from '../db/dbConnection.js'
 
 export const createSupplierProfile = async (userId, data, images) => {
   const {
