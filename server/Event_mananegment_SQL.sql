@@ -75,6 +75,17 @@ CREATE TABLE images (
   image_url VARCHAR(255) NOT NULL,
   FOREIGN KEY (supplier_id) REFERENCES supplier_profiles(id) ON DELETE CASCADE
 );
+
+CREATE TABLE role_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  requested_role ENUM('supplier', 'admin') NOT NULL,
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
 INSERT INTO users (full_name, email, phone, role)
 VALUES 
 ('Gal Cohen', 'gal.cohen@example.com', '0501111111', 'supplier'),

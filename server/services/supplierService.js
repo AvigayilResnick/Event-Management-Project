@@ -1,6 +1,6 @@
-import db from '../db/dbConnection.js'
+import db from '../db/dbConnection.js';
 
-export const createSupplierProfile = async (userId, data, images) => {
+export const createSupplierBusiness = async (userId, data, images) => {
   const {
     business_name,
     category,
@@ -8,10 +8,9 @@ export const createSupplierProfile = async (userId, data, images) => {
     price_min,
     price_max,
     city,
-    event_types // נניח שמגיע כ-JSON string או מערך
+    event_types
   } = data;
 
-  console.log('events:', data);
   const parsedEvents = typeof event_types === 'string' ? JSON.parse(event_types) : event_types;
 
   const [profileResult] = await db.query(
@@ -21,66 +20,132 @@ export const createSupplierProfile = async (userId, data, images) => {
     [userId, business_name, category, description, price_min, price_max, city]
   );
 
-  const supplierId = profileResult.insertId;
+  const businessId = profileResult.insertId;
 
   for (const eventName of parsedEvents) {
-    const [[existingEvent]] = await db.query(
-      'SELECT id FROM events WHERE name = ?',
-      [eventName]
-    );
-
-    let eventId;
-    if (existingEvent) {
-      eventId = existingEvent.id;
-    } else {
-      const [eventResult] = await db.query(
-        'INSERT INTO events (name) VALUES (?)',
-        [eventName]
-      );
-      eventId = eventResult.insertId;
-    }
-
-    await db.query(
-      'INSERT INTO supplier_event_types (supplier_id, event_id) VALUES (?, ?)',
-      [supplierId, eventId]
-    );
+    const [[existingEvent]] = await db.query('SELECT id FROM events WHERE name = ?', [eventName]);
+    const eventId = existingEvent ? existingEvent.id : (await db.query('INSERT INTO events (name) VALUES (?)', [eventName]))[0].insertId;
+    await db.query('INSERT INTO supplier_event_types (supplier_id, event_id) VALUES (?, ?)', [businessId, eventId]);
   }
 
   for (const imageUrl of images) {
-    await db.query(
-      'INSERT INTO images (supplier_id, image_url) VALUES (?, ?)',
-      [supplierId, imageUrl]
-    );
+    await db.query('INSERT INTO images (supplier_id, image_url) VALUES (?, ?)', [businessId, imageUrl]);
   }
 
-  return supplierId;
+  return businessId;
 };
 
-export const getMySupplierProfile = async (userId) => {
-  const [[profile]] = await db.query(
-    `SELECT * FROM supplier_profiles WHERE user_id = ?`,
-    [userId]
-  );
+export const getAllMyBusinesses = async (userId) => {
+  const [profiles] = await db.query(`SELECT * FROM supplier_profiles WHERE user_id = ?`, [userId]);
 
+  for (const profile of profiles) {
+    const [events] = await db.query(
+      `SELECT e.name FROM supplier_event_types s
+       JOIN events e ON s.event_id = e.id
+       WHERE s.supplier_id = ?`,
+      [profile.id]
+    );
+
+    const [images] = await db.query('SELECT id, image_url FROM images WHERE supplier_id = ?', [profile.id]);
+
+    profile.event_types = events.map(e => e.name);
+    profile.images = images.map(img => ({ id: img.id, url: img.image_url }));
+  }
+
+  return profiles;
+};
+
+export const getBusinessById = async (userId, businessId) => {
+  const [[profile]] = await db.query(`SELECT * FROM supplier_profiles WHERE id = ? AND user_id = ?`, [businessId, userId]);
   if (!profile) return null;
 
-  // שליפת סוגי אירועים
-  const [events] = await db.query(
-    `SELECT e.name FROM supplier_event_types s
-     JOIN events e ON s.event_id = e.id
-     WHERE s.supplier_id = ?`,
-    [profile.id]
-  );
-
-  // שליפת תמונות
-  const [images] = await db.query(
-    `SELECT id, image_url FROM images WHERE supplier_id = ?`,
-    [profile.id]
-  );
+  const [events] = await db.query(`SELECT e.name FROM supplier_event_types s JOIN events e ON s.event_id = e.id WHERE s.supplier_id = ?`, [businessId]);
+  const [images] = await db.query(`SELECT id, image_url FROM images WHERE supplier_id = ?`, [businessId]);
 
   return {
     ...profile,
     event_types: events.map(e => e.name),
-    images: images.map(img => img.image_url)
+    images: images.map(img => ({ id: img.id, url: img.image_url }))
   };
+};
+
+export const updateBusinessById = async (userId, businessId, data, newImages = null) => {
+  const [[profile]] = await db.query(`SELECT * FROM supplier_profiles WHERE id = ? AND user_id = ?`, [businessId, userId]);
+  if (!profile) throw new Error('Business not found or not yours');
+
+  const fields = [];
+  const values = [];
+  const fieldMap = {
+    business_name: 'business_name',
+    category: 'category',
+    description: 'description',
+    price_min: 'price_min',
+    price_max: 'price_max',
+    city: 'city'
+  };
+
+  for (const key in fieldMap) {
+    if (key in data) {
+      fields.push(`${fieldMap[key]} = ?`);
+      values.push(data[key]);
+    }
+  }
+
+  if (fields.length > 0) {
+    await db.query(`UPDATE supplier_profiles SET ${fields.join(', ')} WHERE id = ?`, [...values, businessId]);
+  }
+
+  if (data.event_types) {
+    const parsedEvents = typeof data.event_types === 'string' ? JSON.parse(data.event_types) : data.event_types;
+    await db.query(`DELETE FROM supplier_event_types WHERE supplier_id = ?`, [businessId]);
+
+    for (const eventName of parsedEvents) {
+      const [[existingEvent]] = await db.query('SELECT id FROM events WHERE name = ?', [eventName]);
+      const eventId = existingEvent ? existingEvent.id : (await db.query('INSERT INTO events (name) VALUES (?)', [eventName]))[0].insertId;
+      await db.query('INSERT INTO supplier_event_types (supplier_id, event_id) VALUES (?, ?)', [businessId, eventId]);
+    }
+  }
+
+  if (newImages && newImages.length > 0) {
+    for (const imageUrl of newImages) {
+      await db.query('INSERT INTO images (supplier_id, image_url) VALUES (?, ?)', [businessId, imageUrl]);
+    }
+  }
+
+  return businessId;
+};
+
+export const deleteBusinessById = async (userId, businessId) => {
+  const [[profile]] = await db.query(`SELECT id FROM supplier_profiles WHERE id = ? AND user_id = ?`, [businessId, userId]);
+  if (!profile) throw new Error('Business not found or not yours');
+
+  await db.query('DELETE FROM images WHERE supplier_id = ?', [businessId]);
+  await db.query('DELETE FROM supplier_event_types WHERE supplier_id = ?', [businessId]);
+  await db.query('DELETE FROM supplier_profiles WHERE id = ?', [businessId]);
+
+  return true;
+};
+
+export const deleteImageById = async (userId, imageId) => {
+  // נוודא שהתמונה באמת שייכת לאחד העסקים של המשתמש
+  const [[image]] = await db.query(
+    `SELECT supplier_id FROM images WHERE id = ?`,
+    [imageId]
+  );
+
+  if (!image) throw new Error('Image not found');
+
+  const [[ownsBusiness]] = await db.query(
+    `SELECT id FROM supplier_profiles WHERE id = ? AND user_id = ?`,
+    [image.supplier_id, userId]
+  );
+
+  if (!ownsBusiness) throw new Error('Not authorized to delete this image');
+
+  const [result] = await db.query(
+    `DELETE FROM images WHERE id = ?`,
+    [imageId]
+  );
+
+  return result.affectedRows > 0;
 };

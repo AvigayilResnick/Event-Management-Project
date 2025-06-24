@@ -14,6 +14,9 @@ client/build/
 client/.env
 client/.env.local
 
+#server
+server/uploads/
+
 # VSCode
 .vscode/
 
@@ -30,3 +33,5 @@ logs
 *.swp
 *.swo
 .idea/
+
+

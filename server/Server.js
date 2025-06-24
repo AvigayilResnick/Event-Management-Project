@@ -40,7 +40,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/client', clientRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRequestRoutes);
-app.use('/api/suppliers', supplierRoutes);
+app.use('/api/suppliers',  supplierRoutes);
 app.use('/api/messages', messageRoutes); // Uncomment if you have message routes
 // Error handling middleware
 
