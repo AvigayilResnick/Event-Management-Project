@@ -19,6 +19,6 @@ export const getAllEvents = async () => {
 };
 
 export const requestToBecomeSupplier = async () => {
-  const response = await apiClient.post("/roles/request");
+  const response = await apiClient.post("/roles/request", {requested_role: "supplier"});
   return response.data;
 };

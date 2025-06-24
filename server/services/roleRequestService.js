@@ -1,6 +1,7 @@
 import db from '../db/dbConnection.js';
 
 export const createRoleRequest = async (userId, requested_role) => {
+  console.log("so where did I get stock?");
   const [[existing]] = await db.query(
     'SELECT * FROM role_requests WHERE user_id = ? AND status = "pending"',
     [userId]

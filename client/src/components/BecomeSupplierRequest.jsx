@@ -11,7 +11,8 @@ const BecomeSupplierRequest = () => {
       await requestToBecomeSupplier();
       setStatus("נשלח למנהל");
     } catch (err) {
-      setStatus("שגיאה בשליחה");
+      const errorMessage = err?.response?.data?.message || err.message || "שגיאה לא ידועה";
+      setStatus("שגיאה בשליחה: " + errorMessage);
     }
   };
 

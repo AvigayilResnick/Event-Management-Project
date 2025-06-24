@@ -5,7 +5,10 @@ import { checkAdmin } from '../middleware/checkAdmin.js';
 
 const router = express.Router();
 
-router.post('/request', authMiddleware, requestRole); // כל משתמש מחובר יכול לבקש
+router.post('/request', authMiddleware,(req, res, next) => {
+  console.log('POST /request hit!');
+  next();
+}, requestRole); // כל משתמש מחובר יכול לבקש
 router.get('/requests', authMiddleware, checkAdmin, getRequests); // רק admin יכול לראות
 router.patch('/requests/:requestId', authMiddleware, checkAdmin, handleRequest); // אישור/דחייה
 
