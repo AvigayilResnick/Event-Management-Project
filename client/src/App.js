@@ -1,19 +1,20 @@
 import React, { useContext, useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthContext } from "./contexts/AuthContext";
 import AuthModal from "./components/AuthModal";
 import Home from "./pages/Home";
 import SupplierPage from "./pages/SupplierPage";
-import CreateSupplierProfile from "./pages/CreateSupplierProfile";
+import CreateSupplierPage from "./pages/CreateSupplierPage";
 import EditUserProfile from "./pages/EditUserProfile";
-import EditSupplierProfile from "./pages/EditSupplierProfile";
+import EditSupplierPage from "./pages/EditSupplierPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 
 // נוספו
 import About from "./pages/About";
 import BecomeSupplierRequest from "./components/BecomeSupplierRequest";
-import SupplierList from "./pages/SupplierList"; // ← ייבוא מתיקיית pages
+import SupplierList from "./pages/SupplierList";
+import SupplierDashboard from "./pages/SupplierDashboard";
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -29,9 +30,8 @@ function App() {
       <AuthModal isOpen={showModal} onClose={() => setShowModal(false)} />
       <Routes>
         <Route path="/" element={<Home />} />
-
-        <Route path="/suppliers" element={<SupplierList />} /> {/* ← חדש */}
-
+        <Route path="/about" element={<About />} />
+        <Route path="/suppliers" element={<SupplierList />} />
         <Route
           path="/suppliers/:id"
           element={
@@ -40,14 +40,34 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* דפים שמיועדים לספקים בלבד */}
         <Route
           path="/create-supplier"
           element={
             <ProtectedRoute>
-              <CreateSupplierProfile />
+              {user?.role === "supplier" ? <CreateSupplierPage /> : <Navigate to="/" />}
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/edit-supplier-page/:id"
+          element={
+            <ProtectedRoute>
+              {user?.role === "supplier" ? <EditSupplierPage /> : <Navigate to="/" />}
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/supplier-dashboard"
+          element={
+            <ProtectedRoute>
+              {user?.role === "supplier" ? <SupplierDashboard /> : <Navigate to="/" />}
+            </ProtectedRoute>
+          }
+        />
+
+        {/* דפים כלליים */}
         <Route
           path="/edit-user"
           element={
@@ -56,15 +76,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/edit-supplier"
-          element={
-            <ProtectedRoute>
-              <EditSupplierProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/about" element={<About />} />
         <Route
           path="/become-supplier"
           element={

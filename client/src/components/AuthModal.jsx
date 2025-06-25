@@ -4,7 +4,7 @@ import { AuthContext } from "../contexts/AuthContext";
 
 const AuthModal = ({ isOpen, onClose }) => {
   const { login: doLogin } = useContext(AuthContext);
-  const [mode, setMode] = useState("signup"); // 'signup' or 'login'
+  const [mode, setMode] = useState("signup");
   const [form, setForm] = useState({ full_name: "", email: "", password: "", phone: "" });
   const [error, setError] = useState("");
 
@@ -24,6 +24,11 @@ const AuthModal = ({ isOpen, onClose }) => {
 
       doLogin(data.user, data.token);
       onClose();
+
+      // ניתוב אוטומטי לספקים
+      if (data.user.role === "supplier") {
+        window.location.href = "/supplier-dashboard";
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
       setForm((prev) => ({ ...prev, password: "" }));
@@ -121,5 +126,3 @@ const AuthModal = ({ isOpen, onClose }) => {
 };
 
 export default AuthModal;
-// This component provides a modal for user authentication (signup/login).
-// It handles both modes and displays appropriate fields based on the selected mode.
