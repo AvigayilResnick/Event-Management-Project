@@ -2,10 +2,14 @@
 import * as clientService from '../services/clientService.js';
 
 // קבלת ספקים לדף הבית
-export async function getSuppliers(req, res) {
+
+
+// GET /api/client/suppliers
+export const getSuppliers = async (req, res) => {
   try {
     const {
       eventName = null,
+      category = null, // ✅ תוספת
       city = null,
       priceMin = null,
       priceMax = null,
@@ -13,16 +17,15 @@ export async function getSuppliers(req, res) {
       sortBy = 'price_min',
       sortOrder = 'asc',
       limit = 20,
-      offset = 0
+      offset = 0,
     } = req.query;
 
-const priceMinParsed = (typeof priceMin === 'string' && priceMin.trim() !== '') ? Number(priceMin) : null;
-const priceMaxParsed = (typeof priceMax === 'string' && priceMax.trim() !== '') ? Number(priceMax) : null;
-
-
+    const priceMinParsed = priceMin !== null ? parseInt(priceMin) : null;
+    const priceMaxParsed = priceMax !== null ? parseInt(priceMax) : null;
 
     const suppliers = await clientService.getSuppliersForHome({
       eventName,
+      category, // ✅ תוספת
       city,
       priceMin: priceMinParsed,
       priceMax: priceMaxParsed,
@@ -33,13 +36,13 @@ const priceMaxParsed = (typeof priceMax === 'string' && priceMax.trim() !== '') 
       offset: parseInt(offset),
     });
 
-    console.log("Found suppliers:", suppliers.length);
     res.json(suppliers);
-  } catch (error) {
-    console.error('Error fetching suppliers:', error);
-    res.status(500).json({ message: 'Server error' });
+  } catch (err) {
+    console.error("Error in getSuppliers:", err);
+    res.status(500).json({ message: "Server error" });
   }
-}
+};
+
 
 
 export async function getAllEvents(req, res) {
@@ -110,5 +113,14 @@ export async function requestSupplier(req, res) {
   } catch (err) {
     console.error('Error in requestSupplier:', err);
     res.status(500).json({ message: 'Server error' });
+  }
+}
+export async function getCategories(req, res) {
+  try {
+    const categories = await clientService.getAllCategories();
+    res.json(categories); 
+  } catch (err) {
+    console.error("Error fetching categories:", err);
+    res.status(500).json({ message: "שגיאה בקבלת קטגוריות" });
   }
 }

@@ -10,6 +10,11 @@ import EditSupplierProfile from "./pages/EditSupplierProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 
+// נוספו
+import About from "./pages/About";
+import BecomeSupplierRequest from "./components/BecomeSupplierRequest";
+import SupplierList from "./pages/SupplierList"; // ← ייבוא מתיקיית pages
+
 function App() {
   const { user } = useContext(AuthContext);
   const [showModal, setShowModal] = useState(!user);
@@ -24,6 +29,9 @@ function App() {
       <AuthModal isOpen={showModal} onClose={() => setShowModal(false)} />
       <Routes>
         <Route path="/" element={<Home />} />
+
+        <Route path="/suppliers" element={<SupplierList />} /> {/* ← חדש */}
+
         <Route
           path="/suppliers/:id"
           element={
@@ -53,6 +61,15 @@ function App() {
           element={
             <ProtectedRoute>
               <EditSupplierProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/about" element={<About />} />
+        <Route
+          path="/become-supplier"
+          element={
+            <ProtectedRoute>
+              <BecomeSupplierRequest />
             </ProtectedRoute>
           }
         />

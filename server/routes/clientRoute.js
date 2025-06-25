@@ -5,7 +5,7 @@ import {
   getSuppliers,
   getSupplierFullDetails,
   sendContactMessage,
-  requestSupplier,getAllEvents
+  requestSupplier,getAllEvents,getCategories
 } from '../controllers/clientController.js';
 
 
@@ -19,7 +19,7 @@ router.get('/suppliers', getSuppliers);
 // GET /api/client/suppliers/full/:id
 router.get('/suppliers/full/:id', authMiddleware, getSupplierFullDetails);
 
-
+router.get('/categories', getCategories);
 
 
 

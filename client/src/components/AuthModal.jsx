@@ -5,7 +5,7 @@ import { AuthContext } from "../contexts/AuthContext";
 const AuthModal = ({ isOpen, onClose }) => {
   const { login: doLogin } = useContext(AuthContext);
   const [mode, setMode] = useState("signup"); // 'signup' or 'login'
-  const [form, setForm] = useState({ full_name: "", email: "", password: "" });
+  const [form, setForm] = useState({ full_name: "", email: "", password: "", phone: "" });
   const [error, setError] = useState("");
 
   if (!isOpen) return null;
@@ -80,17 +80,19 @@ const AuthModal = ({ isOpen, onClose }) => {
             required
             className="border rounded px-4 py-2"
           />
+
           {mode === "signup" && (
             <input
               type="tel"
               name="phone"
-              placeholder="phone"
+              placeholder="Phone"
               value={form.phone}
               onChange={handleChange}
               required
               className="border rounded px-4 py-2"
             />
           )}
+
           <button
             type="submit"
             className="bg-pink-500 text-white py-2 rounded hover:bg-pink-600 transition"
@@ -119,3 +121,5 @@ const AuthModal = ({ isOpen, onClose }) => {
 };
 
 export default AuthModal;
+// This component provides a modal for user authentication (signup/login).
+// It handles both modes and displays appropriate fields based on the selected mode.

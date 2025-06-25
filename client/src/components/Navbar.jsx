@@ -1,38 +1,41 @@
-import React, { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useContext, useState } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
-import { logout as logoutApi } from "../api/auth";
+import AuthModal from "./AuthModal"; // ודא שזה הנתיב הנכון
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logoutApi();
-    logout();
-    navigate("/");
-  };
+  const [modalOpen, setModalOpen] = useState(false); // ניהול מצב התחברות
 
   return (
-    <nav className="bg-white shadow mb-6 p-4 flex justify-between items-center">
-      <Link to="/" className="text-pink-600 text-2xl font-bold">
-        ספקים לאירועים
-      </Link>
+    <nav className="bg-white shadow px-6 py-4 flex justify-between items-center">
+      <Link to="/" className="text-pink-600 font-bold text-xl">Event Suppliers</Link>
+      <div className="flex gap-4 items-center">
+        <Link to="/about" className="text-gray-600 hover:text-pink-600">About</Link>
 
-      <div className="flex items-center gap-4">
+        {user && user.role === "supplier" && (
+          <Link to="/edit-supplier" className="text-gray-600 hover:text-pink-600">Edit Profile</Link>
+        )}
+
+        {user && user.role === "client" && (
+          <Link to="/create-supplier" className="text-gray-600 hover:text-pink-600">Become a Supplier</Link>
+        )}
+
         {user ? (
           <>
-            <span className="text-gray-700">שלום, {user.full_name}</span>
-            <Link to="/edit-user" className="text-blue-600 underline">ערוך פרופיל</Link>
-            {user.role === "supplier" && (
-              <Link to="/edit-supplier" className="text-blue-600 underline">ערוך דף ספק</Link>
-            )}
-            <button onClick={handleLogout} className="text-red-500 hover:underline">
-              התנתק
-            </button>
+            <span className="text-gray-600">{user.full_name}</span>
+            <button onClick={logout} className="text-red-500 hover:underline">Logout</button>
           </>
         ) : (
-          <span className="text-gray-600">ברוך הבא</span>
+          <>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="text-pink-600 hover:underline"
+            >
+              Login / Register
+            </button>
+            <AuthModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+          </>
         )}
       </div>
     </nav>
@@ -40,5 +43,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-// This Navbar component displays the site title and user information.
-// It includes links to edit the user profile and supplier profile if the user is logged in.

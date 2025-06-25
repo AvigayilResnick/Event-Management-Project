@@ -9,10 +9,10 @@ const BecomeSupplierRequest = () => {
   const handleRequest = async () => {
     try {
       await requestToBecomeSupplier();
-      setStatus("נשלח למנהל");
+      setStatus("Request sent to the admin.");
     } catch (err) {
-      const errorMessage = err?.response?.data?.message || err.message || "שגיאה לא ידועה";
-      setStatus("שגיאה בשליחה: " + errorMessage);
+      const errorMessage = err?.response?.data?.message || err.message || "Unknown error";
+      setStatus("Error sending request: " + errorMessage);
     }
   };
 
@@ -20,9 +20,9 @@ const BecomeSupplierRequest = () => {
 
   return (
     <div className="text-center my-8">
-      <p className="mb-2">רוצה להציע שירותים כספק?</p>
+      <p className="mb-2">Want to offer services as a supplier?</p>
       <button onClick={handleRequest} className="bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600">
-        בקש להיות ספק
+        Request to Become a Supplier
       </button>
       {status && <p className="mt-2 text-green-600">{status}</p>}
     </div>
@@ -30,5 +30,3 @@ const BecomeSupplierRequest = () => {
 };
 
 export default BecomeSupplierRequest;
-// This component allows clients to request to become suppliers.
-// It checks if the user is a client and provides a button to send the request.

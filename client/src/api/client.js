@@ -22,3 +22,13 @@ export const requestToBecomeSupplier = async () => {
   const response = await apiClient.post("/roles/request", {requested_role: "supplier"});
   return response.data;
 };
+export const getAllCategories = async () => {
+  const response = await apiClient.get('/client/categories');
+  return response.data; // [{ category: "צילום" }, ...]
+};
+
+export const getSupplierFullDetails = async (supplierId) => {
+  const response = await apiClient.get(`/client/suppliers/full/${supplierId}`);
+  return response.data;
+};
+

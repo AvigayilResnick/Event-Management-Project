@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 // Get suppliers filtered by search criteria (optional)
 export async function getSuppliersForHome({
   eventName = null,
+  category = null,
   city = null,
   priceMin = null,
   priceMax = null,
@@ -14,59 +15,71 @@ export async function getSuppliersForHome({
   limit = 20,
   offset = 0
 }) {
+  const params = [];
   let query = `
     SELECT sp.id, sp.business_name,
            LEFT(sp.description, 120) AS short_description
     FROM supplier_profiles sp
-    JOIN supplier_event_types setp ON sp.id = setp.supplier_id
-    JOIN events e ON e.id = setp.event_id
-    WHERE 1=1
   `;
-  const params = [];
+
+  // ✳️ צור JOIN רק אם יש eventName
+  if (eventName) {
+    query += `
+      JOIN supplier_event_types setp ON sp.id = setp.supplier_id
+      JOIN events e ON e.id = setp.event_id
+    `;
+  }
+
+  query += ` WHERE 1=1 `;
 
   if (eventName) {
-    query += ' AND e.name = ?';
+    query += ` AND e.name = ? `;
     params.push(eventName);
   }
 
+  if (category) {
+    query += ` AND sp.category = ? `;
+    params.push(category);
+  }
+
   if (city) {
-    query += ' AND sp.city = ?';
+    query += ` AND sp.city = ? `;
     params.push(city);
   }
 
   if (
-  typeof priceMin === "number" &&
-  typeof priceMax === "number" &&
-  !isNaN(priceMin) &&
-  !isNaN(priceMax)
-) 
-{
-    query += ' AND sp.price_max >= ? AND sp.price_min <= ?';
+    typeof priceMin === "number" &&
+    typeof priceMax === "number" &&
+    !isNaN(priceMin) &&
+    !isNaN(priceMax)
+  ) {
+    query += ` AND sp.price_max >= ? AND sp.price_min <= ? `;
     params.push(priceMin, priceMax);
   }
 
   if (search) {
-    query += ' AND (sp.business_name LIKE ? OR sp.description LIKE ?)';
+    query += ` AND (sp.business_name LIKE ? OR sp.description LIKE ?) `;
     params.push(`%${search}%`, `%${search}%`);
   }
 
-  query += ' GROUP BY sp.id ';
+  query += ` GROUP BY sp.id `;
 
   if (sortBy === 'average_price') {
-    query += ` ORDER BY (sp.price_min + sp.price_max) / 2 ${sortOrder.toUpperCase()}`;
+    query += ` ORDER BY (sp.price_min + sp.price_max) / 2 ${sortOrder.toUpperCase()} `;
   } else {
-    query += ` ORDER BY sp.${sortBy} ${sortOrder.toUpperCase()}`;
+    query += ` ORDER BY sp.${sortBy} ${sortOrder.toUpperCase()} `;
   }
 
-  query += ' LIMIT ? OFFSET ?';
+  query += ` LIMIT ? OFFSET ? `;
   params.push(limit, offset);
 
-  console.log("Final SQL:", query);
-  console.log("Params:", params);
+ 
 
   const [rows] = await db.query(query, params);
   return rows;
 }
+
+
 
 
 
@@ -145,5 +158,16 @@ export async function requestSupplier(userId) {
   );
 
   return { success: true };
+}
+
+
+
+export async function getAllCategories() {
+  const [rows] = await db.query(`
+    SELECT DISTINCT category
+    FROM supplier_categories
+    ORDER BY category
+  `);
+  return rows;
 }
 
