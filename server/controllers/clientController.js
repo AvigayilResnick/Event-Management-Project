@@ -124,3 +124,13 @@ export async function getCategories(req, res) {
     res.status(500).json({ message: "שגיאה בקבלת קטגוריות" });
   }
 }
+
+export async function getMaxSupplierPrice(req, res) {
+  try {
+    const maxPrice = await clientService.fetchMaxSupplierPrice();
+    res.json({ maxPrice });
+  } catch (error) {
+    console.error("Error fetching max supplier price:", error);
+    res.status(500).json({ error: "Failed to fetch max supplier price" });
+  }
+}

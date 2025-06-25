@@ -32,3 +32,7 @@ export const getSupplierFullDetails = async (supplierId) => {
   return response.data;
 };
 
+export const getMaxSupplierPrice = async () => {
+  const response = await apiClient.get("/client/max-price");
+  return response.data;
+};

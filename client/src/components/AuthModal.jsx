@@ -5,7 +5,12 @@ import { AuthContext } from "../contexts/AuthContext";
 const AuthModal = ({ isOpen, onClose }) => {
   const { login: doLogin } = useContext(AuthContext);
   const [mode, setMode] = useState("signup");
-  const [form, setForm] = useState({ full_name: "", email: "", password: "", phone: "" });
+  const [form, setForm] = useState({
+    full_name: "",
+    email: "",
+    password: "",
+    phone: "",
+  });
   const [error, setError] = useState("");
 
   if (!isOpen) return null;
@@ -25,10 +30,15 @@ const AuthModal = ({ isOpen, onClose }) => {
       doLogin(data.user, data.token);
       onClose();
 
-      // ניתוב אוטומטי לספקים
-      if (data.user.role === "supplier") {
+      // ✅ ניתוב חכם אחרי התחברות
+      const redirect = localStorage.getItem("redirectAfterLogin");
+      if (redirect) {
+        localStorage.removeItem("redirectAfterLogin");
+        window.location.href = redirect;
+      } else if (data.user.role === "supplier") {
         window.location.href = "/supplier-dashboard";
       }
+
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
       setForm((prev) => ({ ...prev, password: "" }));

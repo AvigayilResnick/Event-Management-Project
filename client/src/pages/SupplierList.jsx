@@ -1,14 +1,20 @@
-// SupplierList.jsx - updated with visual filter tags
 import React, { useEffect, useState, useRef } from "react";
-import { getAllSuppliers, getAllEvents } from "../api/client";
+import {
+  getAllSuppliers,
+  getAllEvents,
+  getMaxSupplierPrice,
+} from "../api/client";
 import SupplierCard from "../components/SupplierCard";
+import PriceRangeSlider from "../components/PriceRangeSlider";
 import { useSearchParams } from "react-router-dom";
+import { debounce } from "lodash";
 
 const SupplierList = ({ preSelectedEvent = "" }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [maxPriceInDB, setMaxPriceInDB] = useState(10000);
   const [searchParams, setSearchParams] = useSearchParams();
   const observer = useRef();
   const limit = 3;
@@ -17,23 +23,50 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
     eventName: preSelectedEvent || searchParams.get("eventName") || "",
     category: searchParams.get("category") || "",
     city: searchParams.get("city") || "",
-    priceMin: searchParams.get("priceMin") || "",
-    priceMax: searchParams.get("priceMax") || "",
+    priceMin: parseInt(searchParams.get("priceMin")) || 0,
+    priceMax: parseInt(searchParams.get("priceMax")) || 10000,
     search: searchParams.get("search") || "",
     sortBy: searchParams.get("sortBy") || "price_min",
     sortOrder: searchParams.get("sortOrder") || "asc",
   };
 
   const [filters, setFilters] = useState(defaultFilters);
+  const [sliderValue, setSliderValue] = useState([
+    defaultFilters.priceMin,
+    defaultFilters.priceMax,
+  ]);
   const [offset, setOffset] = useState(0);
   const debounceTimer = useRef(null);
   const lastElementRef = useRef();
+
+  const debouncedSetPriceRange = useRef(
+    debounce(([min, max]) => {
+      setFilters((prev) => ({
+        ...prev,
+        priceMin: min,
+        priceMax: max,
+      }));
+    }, 400)
+  ).current;
 
   useEffect(() => {
     getAllEvents().then((list) => {
       const unique = [...new Set(list)];
       setEvents(unique);
     });
+  }, []);
+
+  useEffect(() => {
+    getMaxSupplierPrice()
+      .then((data) => {
+        const max = data.maxPrice || 10000;
+        setMaxPriceInDB(max);
+        setSliderValue((prev) => [
+          prev[0],
+          prev[1] > max ? max : prev[1],
+        ]);
+      })
+      .catch(() => setMaxPriceInDB(10000));
   }, []);
 
   useEffect(() => {
@@ -92,53 +125,94 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
 
   return (
     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-      {/* Sidebar Filters */}
-      <aside className="bg-white p-6 rounded-xl shadow h-fit sticky top-4">
-        <h3 className="text-lg font-semibold mb-4 text-pink-600">סינון ספקים</h3>
+      <aside className="bg-white p-6 rounded-xl shadow sticky top-4 overflow-visible">
+        <h3 className="text-lg font-semibold mb-4 text-pink-600">Filter Suppliers</h3>
         <form className="flex flex-col gap-4">
-          <select name="eventName" value={filters.eventName} onChange={handleChange} className="p-2 border rounded">
-            <option value="">כל סוגי האירועים</option>
+          <select
+            name="eventName"
+            value={filters.eventName}
+            onChange={handleChange}
+            className="p-2 border rounded"
+          >
+            <option value="">All Event Types</option>
             {events.map((ev, idx) => (
-              <option key={idx} value={ev}>{ev}</option>
+              <option key={idx} value={ev}>
+                {ev}
+              </option>
             ))}
           </select>
 
-          <input type="text" name="category" value={filters.category} onChange={handleChange} placeholder="קטגוריה" className="p-2 border rounded" />
+          <input
+            type="text"
+            name="category"
+            value={filters.category}
+            onChange={handleChange}
+            placeholder="Category"
+            className="p-2 border rounded"
+          />
 
-          <input type="text" name="city" value={filters.city} onChange={handleChange} placeholder="עיר" className="p-2 border rounded" />
+          <input
+            type="text"
+            name="city"
+            value={filters.city}
+            onChange={handleChange}
+            placeholder="City"
+            className="p-2 border rounded"
+          />
 
-          <input type="number" name="priceMin" value={filters.priceMin} onChange={handleChange} placeholder="מחיר מינימום" className="p-2 border rounded" />
+          <PriceRangeSlider
+            min={0}
+            max={maxPriceInDB}
+            value={sliderValue}
+            onChange={(newValue) => {
+              setSliderValue(newValue);
+              debouncedSetPriceRange(newValue);
+            }}
+          />
 
-          <input type="number" name="priceMax" value={filters.priceMax} onChange={handleChange} placeholder="מחיר מקסימום" className="p-2 border rounded" />
+          <input
+            type="text"
+            name="search"
+            value={filters.search}
+            onChange={handleDebouncedSearch}
+            placeholder="Search..."
+            className="p-2 border rounded"
+          />
 
-          <input type="text" name="search" value={filters.search} onChange={handleDebouncedSearch} placeholder="חיפוש חופשי..." className="p-2 border rounded" />
-
-          <select name="sortBy" value={filters.sortBy} onChange={handleChange} className="p-2 border rounded">
-            <option value="price_min">מחיר מינ'</option>
-            <option value="price_max">מחיר מקס'</option>
-            <option value="business_name">שם עסק</option>
-            <option value="city">עיר</option>
-            <option value="average_price">מחיר ממוצע</option>
+          <select
+            name="sortBy"
+            value={filters.sortBy}
+            onChange={handleChange}
+            className="p-2 border rounded"
+          >
+            <option value="price_min">Min Price</option>
+            <option value="price_max">Max Price</option>
+            <option value="business_name">Business Name</option>
+            <option value="city">City</option>
+            <option value="average_price">Average Price</option>
           </select>
 
-          <select name="sortOrder" value={filters.sortOrder} onChange={handleChange} className="p-2 border rounded">
-            <option value="asc">סדר עולה</option>
-            <option value="desc">סדר יורד</option>
+          <select
+            name="sortOrder"
+            value={filters.sortOrder}
+            onChange={handleChange}
+            className="p-2 border rounded"
+          >
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
           </select>
         </form>
       </aside>
 
-      {/* Supplier Results */}
       <section className="lg:col-span-3">
         <h2 className="text-2xl font-bold text-pink-700 mb-4">
           {filters.eventName
-            ? `ספקים לאירוע: ${filters.eventName}`
+            ? `Suppliers for: ${filters.eventName}`
             : filters.category
-            ? `ספקים בקטגוריה: ${filters.category}`
-            : "כל הספקים"}
+            ? `Suppliers in category: ${filters.category}`
+            : "All Suppliers"}
         </h2>
 
-        {/* Visual filter tags */}
         {Object.entries(filters).filter(([k, v]) => v).length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
             {Object.entries(filters).map(([key, value]) =>
@@ -157,12 +231,26 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
                 </div>
               ) : null
             )}
-            <button
-              onClick={() => setFilters({ ...defaultFilters })}
-              className="ml-4 text-sm text-gray-600 hover:underline"
-            >
-              נקה את כל הסינונים
-            </button>
+           <button
+  onClick={() => {
+    setFilters({
+      eventName: "",
+      category: "",
+      city: "",
+      priceMin: 0,
+      priceMax: maxPriceInDB,
+      search: "",
+      sortBy: "price_min",
+      sortOrder: "asc",
+    });
+    setSliderValue([0, maxPriceInDB]); // ✅ מאפס את הסליידר
+    setSearchParams({}); // ✅ מוחק query מה-URL
+  }}
+  className="ml-4 text-sm text-gray-600 hover:underline"
+>
+  Clear All Filters
+</button>
+
           </div>
         )}
 
@@ -173,13 +261,15 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
         </div>
 
         {!loading && suppliers.length === 0 && (
-          <p className="text-center text-gray-500 mt-8">לא נמצאו ספקים מתאימים.</p>
+          <p className="text-center text-gray-500 mt-8">
+            No matching suppliers found.
+          </p>
         )}
 
         <div ref={lastElementRef} />
         {loading && (
           <div className="text-center py-4 text-gray-500 animate-pulse">
-            טוען ספקים נוספים...
+            Loading more suppliers...
           </div>
         )}
       </section>

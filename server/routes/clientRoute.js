@@ -5,7 +5,7 @@ import {
   getSuppliers,
   getSupplierFullDetails,
   sendContactMessage,
-  requestSupplier,getAllEvents,getCategories
+  requestSupplier,getAllEvents,getCategories,getMaxSupplierPrice
 } from '../controllers/clientController.js';
 
 
@@ -20,7 +20,7 @@ router.get('/suppliers', getSuppliers);
 router.get('/suppliers/full/:id', authMiddleware, getSupplierFullDetails);
 
 router.get('/categories', getCategories);
-
+router.get("/max-price", getMaxSupplierPrice);
 
 
 

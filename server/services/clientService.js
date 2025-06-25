@@ -83,6 +83,12 @@ export async function getSuppliersForHome({
 
 
 
+export async function fetchMaxSupplierPrice() {
+  const [[{ maxPrice }]] = await db.query(`
+    SELECT MAX(price_max) AS maxPrice FROM supplier_profiles
+  `);
+  return maxPrice;
+}
 
 export async function getAllEvents() {
 const [events] = await db.query('SELECT DISTINCT name FROM events ORDER BY name ASC');

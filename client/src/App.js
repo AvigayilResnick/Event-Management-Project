@@ -20,6 +20,16 @@ function App() {
   const { user } = useContext(AuthContext);
   const [showModal, setShowModal] = useState(!user);
 
+  // ✅ פותח את ה-AuthModal מכל מקום (למשל מתוך ה-Navbar)
+  useEffect(() => {
+    const handleOpenAuthModal = () => setShowModal(true);
+    window.addEventListener("open-auth-modal", handleOpenAuthModal);
+    return () => {
+      window.removeEventListener("open-auth-modal", handleOpenAuthModal);
+    };
+  }, []);
+
+  // עוקב אחרי התחברות/ניתוק ומסתיר את המודל בהתאם
   useEffect(() => {
     setShowModal(!user);
   }, [user]);

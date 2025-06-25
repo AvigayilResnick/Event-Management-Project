@@ -6,7 +6,8 @@ import {
 } from '../services/roleRequestService.js';
 
 export const requestRole = async (req, res) => {
-  const userId = req.userID.id;
+  const userId = req.user.id;
+
   const { requested_role } = req.body;
   console.log('made it to the controller stage my user id:', userId);
   console.log('and my requested role:', requested_role)

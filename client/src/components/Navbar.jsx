@@ -42,7 +42,12 @@ const Navbar = () => {
             </button>
           </>
         ) : (
-          <span className="text-sm text-gray-500">Not logged in</span>
+          <button
+            onClick={() => window.dispatchEvent(new Event("open-auth-modal"))}
+            className="text-sm text-pink-600 hover:underline"
+          >
+            Login / Sign Up
+          </button>
         )}
       </div>
     </nav>
