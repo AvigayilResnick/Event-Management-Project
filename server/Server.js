@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import pool from './db/dbConnection.js'; 
 import dotenv from 'dotenv';
+import bcrypt from 'bcrypt';
 import authRoutes from './routes/authRoute.js';
 import clientRoutes from './routes/clientRoute.js';
 import userRoutes from './routes/userRoute.js';
@@ -42,6 +43,10 @@ app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRequestRoutes);
 app.use('/api/suppliers',  supplierRoutes);
 app.use('/api/messages', messageRoutes); // Uncomment if you have message routes
+
+
+const hashedPassword = await bcrypt.hash("newPassword123", 10);
+console.log(hashedPassword);
 // Error handling middleware
 
 // Start the server on a specified port or default to 5000

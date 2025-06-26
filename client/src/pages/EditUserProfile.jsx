@@ -12,7 +12,7 @@ const EditUserProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await apiClient.get(`/users/me`);
+        const res = await apiClient.get(`/users/myInfo`);
         setForm(res.data);
       } catch (err) {
         alert("Failed to load profile");
@@ -29,7 +29,7 @@ const EditUserProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiClient.put(`/users/me`, form);
+      await apiClient.put(`/users/myInfo`, form);
       alert("Profile updated");
       login({ ...user, ...form }, localStorage.getItem("token"));
       navigate("/profile");

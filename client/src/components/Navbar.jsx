@@ -9,7 +9,7 @@ const Navbar = () => {
     <nav className="bg-white shadow-md px-6 py-4 flex justify-between items-center">
       <div className="flex items-center gap-4">
         <Link to="/" className="text-xl font-bold text-pink-600">
-          Eventify
+          Home
         </Link>
         <Link to="/suppliers" className="text-gray-600 hover:text-pink-600">
           Find Suppliers

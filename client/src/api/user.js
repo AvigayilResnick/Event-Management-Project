@@ -2,13 +2,13 @@ import apiClient from "./apiClient";
 
 // שליפת פרטי המשתמש המחובר
 export const getMyUser = async () => {
-  const response = await apiClient.get("/users/me");
+  const response = await apiClient.get("/users/myInfo");
   return response.data;
 };
 
 // עדכון שם, טלפון, אימייל (אם צריך)
 export const updateMyUser = async (data) => {
-  const response = await apiClient.put("/users/me", data);
+  const response = await apiClient.put("/users/myInfo", data);
   return response.data;
 };
 

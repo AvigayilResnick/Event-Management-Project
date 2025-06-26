@@ -86,6 +86,11 @@ CREATE TABLE role_requests (
 );
 
 
+
+-- 1 Admin
+INSERT INTO users (full_name, email, phone, role) VALUES
+('Sarala and Avigayil', 'eventmanagement146@gmail.com', '0500000000', 'admin');
+
 -- 5 CLIENTS
 INSERT INTO users (full_name, email, phone, role) VALUES
 ('Alice Green', 'alice@example.com', '0501234567', 'client'),
@@ -112,22 +117,23 @@ INSERT INTO users (full_name, email, phone, role) VALUES
 ('Noa Bar', 'noa@example.com', '0519012345', 'supplier'),
 ('Ziv Shalev', 'ziv@example.com', '0520123456', 'supplier');
 
+
 INSERT INTO supplier_profiles (user_id, business_name, category, description, price_min, price_max, city) VALUES
-(6, 'Gal Photography', 'Photographer', 'Captures special moments.', 1500, 3000, 'Tel Aviv'),
-(7, 'Maya Lights', 'Lighting', 'Professional event lighting.', 2000, 4000, 'Haifa'),
-(8, 'Ori Sounds', 'DJ', 'Top DJ for any event.', 2500, 4500, 'Jerusalem'),
-(9, 'Lior Events', 'Lighting', 'Expert in venue lighting.', 2200, 3900, 'Netanya'),
-(10, 'Nina Catering', 'Caterer', 'Delicious food for all events.', 1800, 4200, 'Holon'),
-(11, 'Ronit Music', 'DJ', 'Feel the beat with Ronit.', 2600, 4600, 'Raanana'),
-(12, 'Gadi Photos', 'Photographer', 'Memories in every shot.', 1700, 3100, 'Tel Aviv'),
-(13, 'Tomer Audio', 'Sound Technician', 'Clear sound solutions.', 2300, 4300, 'Beer Sheva'),
-(14, 'Dikla Flowers', 'Decorator', 'Beautiful floral arrangements.', 2100, 3700, 'Holon'),
-(15, 'Amit Events', 'Planner', 'Plan your perfect day.', 3000, 5500, 'Tel Aviv'),
-(16, 'David Studio', 'Photographer', 'Studio sessions and events.', 1900, 3400, 'Ramat Gan'),
-(17, 'Oren Light & Sound', 'Lighting', 'Complete audio-visual service.', 2800, 4800, 'Petah Tikva'),
-(18, 'Yael Cakes', 'Caterer', 'Cakes and sweets for events.', 1200, 2500, 'Rehovot'),
-(19, 'Noa Moments', 'Photographer', 'Natural and artistic photos.', 1750, 3300, 'Herzliya'),
-(20, 'Ziv Pro DJ', 'DJ', 'Professional DJing since 2010.', 2600, 4600, 'Hadera');
+(7, 'Gal Photography', 'Photographer', 'Captures special moments.', 1500, 3000, 'Tel Aviv'),
+(8, 'Maya Lights', 'Lighting', 'Professional event lighting.', 2000, 4000, 'Haifa'),
+(9, 'Ori Sounds', 'DJ', 'Top DJ for any event.', 2500, 4500, 'Jerusalem'),
+(10, 'Lior Events', 'Lighting', 'Expert in venue lighting.', 2200, 3900, 'Netanya'),
+(11, 'Nina Catering', 'Caterer', 'Delicious food for all events.', 1800, 4200, 'Holon'),
+(12, 'Ronit Music', 'DJ', 'Feel the beat with Ronit.', 2600, 4600, 'Raanana'),
+(13, 'Gadi Photos', 'Photographer', 'Memories in every shot.', 1700, 3100, 'Tel Aviv'),
+(14, 'Tomer Audio', 'Sound Technician', 'Clear sound solutions.', 2300, 4300, 'Beer Sheva'),
+(15, 'Dikla Flowers', 'Decorator', 'Beautiful floral arrangements.', 2100, 3700, 'Holon'),
+(16, 'Amit Events', 'Planner', 'Plan your perfect day.', 3000, 5500, 'Tel Aviv'),
+(17, 'David Studio', 'Photographer', 'Studio sessions and events.', 1900, 3400, 'Ramat Gan'),
+(18, 'Oren Light & Sound', 'Lighting', 'Complete audio-visual service.', 2800, 4800, 'Petah Tikva'),
+(19, 'Yael Cakes', 'Caterer', 'Cakes and sweets for events.', 1200, 2500, 'Rehovot'),
+(20, 'Noa Moments', 'Photographer', 'Natural and artistic photos.', 1750, 3300, 'Herzliya'),
+(21, 'Ziv Pro DJ', 'DJ', 'Professional DJing since 2010.', 2600, 4600, 'Hadera');
 
 INSERT INTO events (id, name) VALUES
 (1, 'Wedding'),
@@ -139,15 +145,15 @@ INSERT INTO events (id, name) VALUES
 
 -- Wedding
 INSERT INTO supplier_event_types (supplier_id, event_id)
-SELECT id, 1 FROM supplier_profiles WHERE user_id IN (6, 8, 10, 11, 12, 16, 19, 20);
+SELECT id, 1 FROM supplier_profiles WHERE user_id IN (7, 9,  11, 12, 13, 17, 20, 21);
 
 -- Bar Mitzvah
 INSERT INTO supplier_event_types (supplier_id, event_id)
-SELECT id, 2 FROM supplier_profiles WHERE user_id IN (10, 12, 18, 19);
+SELECT id, 2 FROM supplier_profiles WHERE user_id IN (11, 13, 19, 20);
 
 -- Corporate Event
 INSERT INTO supplier_event_types (supplier_id, event_id)
-SELECT id, 3 FROM supplier_profiles WHERE user_id IN (7, 9, 13, 17, 20);
+SELECT id, 3 FROM supplier_profiles WHERE user_id IN (8, 10, 14, 18, 21);
 
 INSERT INTO passwords (user_id, password_hash)
 SELECT id, '$2b$10$y8EY.gjH6hDZng2dqPEqle7lDc6NNBQqkMYMraH1X4BZ1Q8/kCn6C'
@@ -156,5 +162,3 @@ INSERT INTO supplier_categories (event_id, category) VALUES
 (1, 'Photographer'), (1, 'DJ'), (1, 'Caterer'),
 (2, 'Photographer'), (2, 'Caterer'),
 (3, 'DJ'), (3, 'Lighting'), (3, 'Sound Technician'), (3, 'Decorator'), (3, 'Planner');
-
-
