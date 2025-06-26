@@ -4,9 +4,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
 
-console.log("🔐 Loaded secret:", process.env.JWT_SECRET);
-console.log("🔐 Length:", process.env.JWT_SECRET.length);
-console.log("🧪 Secret used for SIGNING:", process.env.JWT_SECRET);
+
 
 export const signup = async ({ full_name, email, phone, password, role = 'client' }) => {
   const [[existing]] = await db.query('SELECT * FROM users WHERE email = ?', [email]);

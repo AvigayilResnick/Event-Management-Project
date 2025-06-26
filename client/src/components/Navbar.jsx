@@ -18,11 +18,14 @@ const Navbar = () => {
           About
         </Link>
 
+        {user && (
+          <Link to="/profile" className="text-gray-600 hover:text-pink-600">
+            My Profile
+          </Link>
+        )}
+
         {user && user.role === "supplier" && (
           <>
-            <Link to="/edit-supplier" className="text-gray-600 hover:text-pink-600">
-              Edit Profile
-            </Link>
             <Link to="/supplier-dashboard" className="text-gray-600 hover:text-pink-600">
               Dashboard
             </Link>

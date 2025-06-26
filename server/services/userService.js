@@ -13,44 +13,42 @@ export async function getUserById(userId) {
     JOIN passwords p ON u.id = p.user_id
     WHERE u.id = ?
   `;
-
   const [rows] = await db.execute(sql, [userId]);
-
   if (rows.length === 0) return null;
-
-  return rows[0]; // מחזיר אובייקט עם כל השדות כולל password_hash
+  return rows[0];
 }
 
 export const updateUserProfile = async (id, data) => {
-  const { full_name, phone } = data;
+  const { full_name, phone, email } = data;
+
+  // בדיקה אם אימייל כבר תפוס למשתמש אחר
+  const [[existing]] = await db.query(
+    'SELECT id FROM users WHERE email = ? AND id != ?',
+    [email, id]
+  );
+  if (existing) throw new Error('Email already in use');
+
   const [result] = await db.query(
-    'UPDATE users SET full_name = ?, phone = ? WHERE id = ?',
-    [full_name, phone, id]
+    'UPDATE users SET full_name = ?, phone = ?, email = ? WHERE id = ?',
+    [full_name, phone, email, id]
   );
   return result.affectedRows > 0;
 };
 
 export const changePasswordService = async (userId, currentPassword, newPassword) => {
   const user = await getUserById(userId);
-  console.log('User from DB:', user);
   if (!user) throw new Error('User not found');
-console.log('currentPassword:', currentPassword);
-console.log('user.password_hash:', user.password_hash);
 
   const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
   if (!isMatch) throw new Error('Current password incorrect');
 
   const newHash = await bcrypt.hash(newPassword, 10);
-
   const result = await updateUserPassword(userId, newHash);
   return result;
 };
+
 export async function updateUserPassword(userId, newHash) {
-  const sql = `
-    UPDATE passwords
-    SET password_hash = ?
-    WHERE user_id = ?
-  `;
+  const sql = `UPDATE passwords SET password_hash = ? WHERE user_id = ?`;
   const [result] = await db.execute(sql, [newHash, userId]);
   return result.affectedRows === 1;
 }

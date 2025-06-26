@@ -1,9 +1,8 @@
 import * as userService from '../services/userService.js';
 
-export const getUserProfile = async (req, res) => {
+export const getMyProfile = async (req, res) => {
   try {
-    const userId = req.params.id;
-    const user = await userService.getUserById(userId);
+    const user = await userService.getUserById(req.user.id);
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
   } catch (error) {
@@ -12,25 +11,25 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
-export const updateUserProfile = async (req, res) => {
+export const updateMyProfile = async (req, res) => {
   try {
-    const userId = req.params.id;
-    const { full_name, phone } = req.body;
-
-    const updated = await userService.updateUserProfile(userId, { full_name, phone });
+    const { full_name, phone, email } = req.body;
+    const updated = await userService.updateUserProfile(req.user.id, { full_name, phone, email });
     if (!updated) return res.status(404).json({ message: 'User not found or not updated' });
-
     res.json({ message: 'Profile updated successfully' });
   } catch (error) {
     console.error(error);
+    if (error.message.includes('Email already in use')) {
+      return res.status(400).json({ message: 'Email is already taken by another user' });
+    }
     res.status(500).json({ message: 'Internal server error' });
   }
-};      
+};
+
 export const changePasswordController = async (req, res) => {
   try {
-    const userId = req.user.id; // מ־middleware האותנטיקציה
+    const userId = req.user.id;
     const { currentPassword, newPassword } = req.body;
- console.log('userId:', userId, 'currentPassword:', currentPassword, 'newPassword:', newPassword);
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: 'Missing passwords' });
     }
