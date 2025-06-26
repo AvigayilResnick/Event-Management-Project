@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }) => {
 
 //     console.log("🟡 Token קיים, מנסה לטעון את המשתמש...");
 
-//     fetch("http://localhost:5000/api/users/myInfo", {
+//     fetch("http://localhost:5000/api/users/myInfoForRefresh", {
 //       headers: {
 //         Authorization: `Bearer ${token}`,
 //       },
