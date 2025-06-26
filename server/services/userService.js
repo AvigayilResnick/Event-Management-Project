@@ -54,3 +54,32 @@ export async function updateUserPassword(userId, newHash) {
   const [result] = await db.execute(sql, [newHash, userId]);
   return result.affectedRows === 1;
 }
+
+
+export const getUserWithOptionalSupplier = async (userId) => {
+  // שליפת המשתמש
+  const [users] = await pool.query(
+    "SELECT id, full_name, email, phone, role FROM users WHERE id = ?",
+    [userId]
+  );
+
+  if (users.length === 0) {
+    throw new Error("User not found");
+  }
+
+  const user = users[0];
+
+  // אם הוא ספק – נחפש את הספק שלו
+  if (user.role === "supplier") {
+    const [suppliers] = await pool.query(
+      "SELECT id FROM supplier_profiles WHERE user_id = ?",
+      [userId]
+    );
+
+    if (suppliers.length > 0) {
+      user.supplier_id = suppliers[0].id;
+    }
+  }
+
+  return user;
+};

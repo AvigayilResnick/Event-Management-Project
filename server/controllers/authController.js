@@ -15,6 +15,7 @@ export const loginController = async (req, res) => {
     const { token, user } = await login(email, password);
     res.json({ token, user });
   } catch (err) {
+    console.log(err.message);
     res.status(401).json({ message: err.message });
   }
 };
