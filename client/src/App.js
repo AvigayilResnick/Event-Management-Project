@@ -15,7 +15,8 @@ import BecomeSupplierRequest from "./components/BecomeSupplierRequest";
 import SupplierList from "./pages/SupplierList";
 import SupplierDashboard from "./pages/SupplierDashboard";
 import MyProfile from "./pages/MyProfile";
-import ChangePassword from "./pages/ChangePassword"; // ✅ חדש
+import ChangePassword from "./pages/ChangePassword";
+import RoleRequestsPage from "./pages/RoleRequestsPage"; // ✅ חדש
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -109,6 +110,16 @@ function App() {
           element={
             <ProtectedRoute>
               <BecomeSupplierRequest />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* מנהלים בלבד */}
+        <Route
+          path="/admin/requests"
+          element={
+            <ProtectedRoute>
+              {user?.role === "admin" ? <RoleRequestsPage /> : <Navigate to="/" />}
             </ProtectedRoute>
           }
         />

@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
-import { requestToBecomeSupplier } from "../api/client";
+import { requestToBecomeSupplier } from "../api/roleRequests";
 
 const BecomeSupplierRequest = () => {
   const { user } = useContext(AuthContext);

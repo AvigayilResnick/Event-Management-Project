@@ -24,12 +24,16 @@ const Navbar = () => {
           </Link>
         )}
 
-        {user && user.role === "supplier" && (
-          <>
-            <Link to="/supplier-dashboard" className="text-gray-600 hover:text-pink-600">
-              Dashboard
-            </Link>
-          </>
+        {user?.role === "supplier" && (
+          <Link to="/supplier-dashboard" className="text-gray-600 hover:text-pink-600">
+            Dashboard
+          </Link>
+        )}
+
+        {user?.role === "admin" && (
+          <Link to="/admin/requests" className="text-gray-600 hover:text-pink-600">
+            Role Requests
+          </Link>
         )}
       </div>
 
@@ -58,3 +62,5 @@ const Navbar = () => {
 };
 
 export default Navbar;
+// This component renders the navigation bar with links to different pages.
+// It also conditionally displays user information and login/logout options based on the authentication state.

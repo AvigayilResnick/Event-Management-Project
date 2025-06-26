@@ -13,12 +13,12 @@ export const createRoleRequest = async (userId, requested_role) => {
     [userId, requested_role]
   );
 };
-
 export const getAllRequests = async () => {
   const [requests] = await db.query(`
-    SELECT rr.*, u.full_name, u.email
+    SELECT rr.*, u.full_name, u.email, u.phone
     FROM role_requests rr
     JOIN users u ON rr.user_id = u.id
+    WHERE u.role != 'supplier' -- רק מי שלא ספק
     ORDER BY rr.request_date DESC
   `);
   return requests;

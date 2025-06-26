@@ -58,9 +58,11 @@ export async function getSuppliersForHome({
   }
 
   if (search) {
-    query += ` AND (sp.business_name LIKE ? OR sp.description LIKE ?) `;
-    params.push(`%${search}%`, `%${search}%`);
-  }
+  query += ` AND (LOWER(sp.business_name) LIKE ? OR LOWER(sp.description) LIKE ?) `;
+  const safeSearch = `%${search.toLowerCase()}%`;
+  params.push(safeSearch, safeSearch);
+}
+
 
   query += ` GROUP BY sp.id `;
 
