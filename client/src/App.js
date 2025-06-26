@@ -10,17 +10,17 @@ import EditSupplierPage from "./pages/EditSupplierPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 
-// נוספו
 import About from "./pages/About";
 import BecomeSupplierRequest from "./components/BecomeSupplierRequest";
 import SupplierList from "./pages/SupplierList";
 import SupplierDashboard from "./pages/SupplierDashboard";
+import MyProfile from "./pages/MyProfile";
+import ChangePassword from "./pages/ChangePassword"; // ✅ חדש
 
 function App() {
   const { user } = useContext(AuthContext);
   const [showModal, setShowModal] = useState(!user);
 
-  // ✅ פותח את ה-AuthModal מכל מקום (למשל מתוך ה-Navbar)
   useEffect(() => {
     const handleOpenAuthModal = () => setShowModal(true);
     window.addEventListener("open-auth-modal", handleOpenAuthModal);
@@ -29,7 +29,6 @@ function App() {
     };
   }, []);
 
-  // עוקב אחרי התחברות/ניתוק ומסתיר את המודל בהתאם
   useEffect(() => {
     setShowModal(!user);
   }, [user]);
@@ -39,6 +38,7 @@ function App() {
       <Navbar />
       <AuthModal isOpen={showModal} onClose={() => setShowModal(false)} />
       <Routes>
+        {/* ציבורי */}
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/suppliers" element={<SupplierList />} />
@@ -51,7 +51,7 @@ function App() {
           }
         />
 
-        {/* דפים שמיועדים לספקים בלבד */}
+        {/* ספקים בלבד */}
         <Route
           path="/create-supplier"
           element={
@@ -77,7 +77,15 @@ function App() {
           }
         />
 
-        {/* דפים כלליים */}
+        {/* פרופיל משתמש (רגיל או ספק) */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <MyProfile />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/edit-user"
           element={
@@ -86,6 +94,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/change-password"
+          element={
+            <ProtectedRoute>
+              <ChangePassword />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* בקשת מעבר לספק */}
         <Route
           path="/become-supplier"
           element={
