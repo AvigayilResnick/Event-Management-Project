@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   getAllSuppliers,
@@ -16,12 +17,13 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
   const [hasMore, setHasMore] = useState(true);
   const [maxPriceInDB, setMaxPriceInDB] = useState(10000);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [showFilters, setShowFilters] = useState(false);
   const observer = useRef();
   const abortControllerRef = useRef(null);
-  const initialLoadRef = useRef(true); // ✅ למניעת קריאה כפולה
+  const initialLoadRef = useRef(true);
   const limit = 6;
 
-  const defaultFilters = {
+  const defaultFilters = useMemo(() => ({
     eventName: preSelectedEvent || searchParams.get("eventName") || "",
     category: searchParams.get("category") || "",
     city: searchParams.get("city") || "",
@@ -30,25 +32,21 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
     search: searchParams.get("search") || "",
     sortBy: searchParams.get("sortBy") || "price_min",
     sortOrder: searchParams.get("sortOrder") || "asc",
-  };
+  }), [searchParams, preSelectedEvent]);
 
   const [filters, setFilters] = useState(defaultFilters);
   const [debouncedFilters, setDebouncedFilters] = useState(defaultFilters);
-  const [sliderValue, setSliderValue] = useState([
-    defaultFilters.priceMin,
-    defaultFilters.priceMax,
-  ]);
+  const [sliderValue, setSliderValue] = useState([defaultFilters.priceMin, defaultFilters.priceMax]);
   const [offset, setOffset] = useState(0);
   const lastElementRef = useRef();
 
   const debouncedUpdateFilters = useMemo(
-    () =>
-      debounce((newFilters) => {
-        setDebouncedFilters((prev) => ({
-          ...prev,
-          ...newFilters,
-        }));
-      }, 400),
+    () => debounce((newFilters) => {
+      setDebouncedFilters((prev) => ({
+        ...prev,
+        ...newFilters,
+      }));
+    }, 400),
     []
   );
 
@@ -66,19 +64,20 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-    debouncedUpdateFilters({ [name]: value });
+    debouncedUpdateFilters({ [name]: value || "" });
   };
 
   const handleDebouncedSearch = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
-    debouncedUpdateFilters({ [name]: value.trim().toLowerCase() });
+    const trimmed = value.trim().toLowerCase();
+    setFilters((prev) => ({ ...prev, [name]: trimmed }));
+    debouncedUpdateFilters({ [name]: trimmed || "" });
   };
 
   const clearFilter = (key) => {
-    const cleared = { ...filters, [key]: "" };
+    const cleared = { ...filters, [key]: key.includes("price") ? 0 : "" };
     setFilters(cleared);
-    debouncedUpdateFilters({ [key]: "" });
+    setDebouncedFilters(cleared);
   };
 
   useEffect(() => {
@@ -93,10 +92,7 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
       .then((data) => {
         const max = data.maxPrice || 10000;
         setMaxPriceInDB(max);
-        setSliderValue((prev) => [
-          prev[0],
-          prev[1] > max ? max : prev[1],
-        ]);
+        setSliderValue((prev) => [prev[0], prev[1] > max ? max : prev[1]]);
       })
       .catch(() => setMaxPriceInDB(10000));
   }, []);
@@ -109,18 +105,14 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
     setSuppliers([]);
     setOffset(0);
     setHasMore(true);
-    initialLoadRef.current = true; // ✅ מאפשר ריסט חדש בעת שינוי פילטר
+    initialLoadRef.current = true;
   }, [debouncedFilters]);
 
   useEffect(() => {
     if (!hasMore) return;
-
-    // ✅ מניעת כפילות בטעינה הראשונה
     if (offset === 0 && initialLoadRef.current) {
       initialLoadRef.current = false;
-    } else if (offset === 0) {
-      return;
-    }
+    } else if (offset === 0) return;
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -130,8 +122,6 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
     abortControllerRef.current = controller;
 
     setLoading(true);
-    console.log("📤 Fetch suppliers", { debouncedFilters, offset });
-
     getAllSuppliers({ ...debouncedFilters, limit, offset }, controller.signal)
       .then((data) => {
         setSuppliers((prev) => {
@@ -148,14 +138,13 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
           setLoading(false);
         }
       });
-  }, [offset, debouncedFilters]);
+  }, [offset, debouncedFilters, hasMore]);
 
   useEffect(() => {
     if (observer.current) observer.current.disconnect();
     if (loading || suppliers.length < limit) return;
 
-    const pageIsScrollable =
-      document.documentElement.scrollHeight > window.innerHeight;
+    const pageIsScrollable = document.documentElement.scrollHeight > window.innerHeight;
     if (!pageIsScrollable) return;
 
     observer.current = new IntersectionObserver(
@@ -176,49 +165,65 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
     };
   }, [loading, hasMore, suppliers.length]);
 
+  const renderFilterForm = () => (
+    <form className="flex flex-col gap-4">
+      <select name="eventName" value={filters.eventName} onChange={handleChange} className="p-2 border rounded">
+        <option value="">All Event Types</option>
+        {events.map((ev, idx) => (
+          <option key={idx} value={ev}>{ev}</option>
+        ))}
+      </select>
+      <input name="category" value={filters.category} onChange={handleChange} placeholder="Category" className="p-2 border rounded" />
+      <input name="city" value={filters.city} onChange={handleChange} placeholder="City" className="p-2 border rounded" />
+      <PriceRangeSlider
+        min={0}
+        max={maxPriceInDB}
+        value={sliderValue}
+        onChange={(newValue) => {
+          setSliderValue(newValue);
+          debouncedSetPriceRange(newValue);
+        }}
+      />
+      <input name="search" value={filters.search} onChange={handleDebouncedSearch} placeholder="Search..." className="p-2 border rounded" />
+      <select name="sortBy" value={filters.sortBy} onChange={handleChange} className="p-2 border rounded">
+        <option value="price_min">Min Price</option>
+        <option value="price_max">Max Price</option>
+        <option value="business_name">Business Name</option>
+        <option value="city">City</option>
+        <option value="average_price">Average Price</option>
+      </select>
+      <select name="sortOrder" value={filters.sortOrder} onChange={handleChange} className="p-2 border rounded">
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+      </select>
+    </form>
+  );
+
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8">
-      <aside className="bg-white p-6 rounded-xl shadow sticky top-4 overflow-visible">
+    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 px-4">
+      {/* aside for desktop */}
+      <aside className="bg-white p-6 rounded-xl shadow sticky top-4 overflow-visible hidden lg:block">
         <h3 className="text-lg font-semibold mb-4 text-pink-600">Filter Suppliers</h3>
-        <form className="flex flex-col gap-4">
-          <select name="eventName" value={filters.eventName} onChange={handleChange} className="p-2 border rounded">
-            <option value="">All Event Types</option>
-            {events.map((ev, idx) => (
-              <option key={idx} value={ev}>{ev}</option>
-            ))}
-          </select>
-
-          <input name="category" value={filters.category} onChange={handleChange} placeholder="Category" className="p-2 border rounded" />
-          <input name="city" value={filters.city} onChange={handleChange} placeholder="City" className="p-2 border rounded" />
-
-          <PriceRangeSlider
-            min={0}
-            max={maxPriceInDB}
-            value={sliderValue}
-            onChange={(newValue) => {
-              setSliderValue(newValue);
-              debouncedSetPriceRange(newValue);
-            }}
-          />
-
-          <input name="search" value={filters.search} onChange={handleDebouncedSearch} placeholder="Search..." className="p-2 border rounded" />
-
-          <select name="sortBy" value={filters.sortBy} onChange={handleChange} className="p-2 border rounded">
-            <option value="price_min">Min Price</option>
-            <option value="price_max">Max Price</option>
-            <option value="business_name">Business Name</option>
-            <option value="city">City</option>
-            <option value="average_price">Average Price</option>
-          </select>
-
-          <select name="sortOrder" value={filters.sortOrder} onChange={handleChange} className="p-2 border rounded">
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-        </form>
+        {renderFilterForm()}
       </aside>
 
       <section className="lg:col-span-3">
+        {/* filter toggle button for mobile */}
+        <button
+          onClick={() => setShowFilters((prev) => !prev)}
+          className="lg:hidden px-4 py-2 bg-pink-500 text-white rounded-md mb-4"
+        >
+          {showFilters ? "Hide Filters" : "Show Filters"}
+        </button>
+
+        {/* mobile filters */}
+        {showFilters && (
+          <aside className="bg-white p-6 rounded-xl shadow mb-4 lg:hidden">
+            <h3 className="text-lg font-semibold mb-4 text-pink-600">Filter Suppliers</h3>
+            {renderFilterForm()}
+          </aside>
+        )}
+
         <h2 className="text-2xl font-bold text-pink-700 mb-4">
           {filters.eventName
             ? `Suppliers for: ${filters.eventName}`
@@ -227,10 +232,10 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
             : "All Suppliers"}
         </h2>
 
-        {Object.entries(filters).filter(([k, v]) => v).length > 0 && (
+        {Object.entries(filters).some(([k, v]) => v && k !== "sortBy" && k !== "sortOrder") && (
           <div className="flex flex-wrap gap-2 mb-6">
             {Object.entries(filters).map(([key, value]) =>
-              value ? (
+              value && key !== "sortBy" && key !== "sortOrder" ? (
                 <div key={key} className="bg-pink-100 text-pink-800 px-4 py-2 rounded-full shadow text-sm flex items-center gap-2">
                   <span>{key}: {value}</span>
                   <button onClick={() => clearFilter(key)} className="text-pink-600 hover:text-pink-900 font-bold">
@@ -252,8 +257,8 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
                   sortOrder: "asc",
                 };
                 setFilters(reset);
+                setDebouncedFilters(reset);
                 setSliderValue([0, maxPriceInDB]);
-                debouncedUpdateFilters(reset);
                 setSearchParams({});
               }}
               className="ml-4 text-sm text-gray-600 hover:underline"
