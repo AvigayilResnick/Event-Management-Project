@@ -22,9 +22,12 @@ const RoleRequestsPage = () => {
   }, []);
 
   const handleDecision = async (id, status) => {
+     console.log("STATUS SENT:", status);
     try {
       await respondToRoleRequest(id, status);
       // הסרה מהמסך אחרי אישור/דחייה
+     
+
       setRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (error) {
       console.error('Failed to update request status', error);
