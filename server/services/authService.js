@@ -27,7 +27,6 @@ export const signup = async ({ full_name, email, phone, password, role = 'client
   return {
     token,
     user: {
-      id: userId,
       full_name,
       email,
       phone,
@@ -48,5 +47,14 @@ export const login = async (email, password) => {
     expiresIn: '2h',
   });
 
-  return { token, user };
+    const { full_name, email: userEmail, phone, role } = user;
+  return {
+    token,
+    user: {
+      full_name,
+      email: userEmail,
+      phone,
+      role
+    }
+  };
 };

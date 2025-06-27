@@ -9,6 +9,18 @@ const EditSupplierPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  const handleDeleteImage = async (imageId) => {
+    try {
+      await apiClient.delete(`/suppliers/images/${imageId}`);
+      setForm((prev) => ({
+        ...prev,
+        images: prev.images.filter((img) => img.id !== imageId),
+      }));
+    } catch (err) {
+      alert("Failed to delete image");
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -51,6 +63,32 @@ const EditSupplierPage = () => {
         <input name="price_min" value={form.price_min} onChange={handleChange} className="border p-2 rounded" placeholder="Minimum Price" />
         <input name="price_max" value={form.price_max} onChange={handleChange} className="border p-2 rounded" placeholder="Maximum Price" />
         <textarea name="description" value={form.description} onChange={handleChange} className="border p-2 rounded" rows={4} placeholder="Description" />
+        <div className="grid grid-cols-2 gap-4">
+          {form.images?.map((img) => (
+            <div key={img.id} className="relative">
+              <img
+                src={`http://localhost:5000/uploads/${img.url}`}
+                alt="Supplier"
+                className="rounded-xl w-full object-cover h-32"
+              />
+              <button
+                type="button"
+                onClick={() => handleDeleteImage(img.id)}
+                className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm"
+                title="Delete image"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={(e) => setForm({ ...form, newImages: e.target.files })}
+          className="border p-2 rounded"
+        />
         <button type="submit" className="bg-pink-500 text-white py-2 rounded hover:bg-pink-600">Save</button>
       </form>
     </div>

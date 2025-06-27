@@ -9,7 +9,7 @@ import {
 
 export const handleCreateSupplierBusiness = async (req, res) => {
   const userId = req.user.id;
-  const images = req.files.map(file => `/uploads/${file.filename}`);
+  const images = req.files.map(file => `${file.filename}`);
 
   try {
     const businessId = await createSupplierBusiness(userId, req.body, images);
@@ -49,7 +49,7 @@ export const handleGetBusinessById = async (req, res) => {
 export const handleUpdateBusinessById = async (req, res) => {
   const userId = req.user.id;
   const businessId = req.params.id;
-  const images = req.files?.length ? req.files.map(file => `/uploads/${file.filename}`) : null;
+  const images = req.files?.length ? req.files.map(file => `${file.filename}`) : null;
 
   try {
     await updateBusinessById(userId, businessId, req.body, images);

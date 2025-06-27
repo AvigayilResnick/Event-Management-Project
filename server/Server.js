@@ -3,6 +3,13 @@ import cors from 'cors';
 import pool from './db/dbConnection.js'; 
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
+import path from 'path';
+// import { fileURLToPath } from 'url'; // 👈 מוסיפים את זה
+// import { dirname } from 'path';       // 👈 וגם את זה
+// // 👇 מחשבים __dirname
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = dirname(__filename);
+
 import authRoutes from './routes/authRoute.js';
 import clientRoutes from './routes/clientRoute.js';
 import userRoutes from './routes/userRoute.js';
@@ -17,6 +24,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
 
 
 // Route to test database connection

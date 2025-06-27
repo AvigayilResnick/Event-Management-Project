@@ -1,6 +1,7 @@
 import db from '../db/dbConnection.js';
 
 export const createSupplierBusiness = async (userId, data, images) => {
+  console.log("➡️ Going to save:", images);
   const {
     business_name,
     category,
@@ -28,7 +29,9 @@ export const createSupplierBusiness = async (userId, data, images) => {
     await db.query('INSERT INTO supplier_event_types (supplier_id, event_id) VALUES (?, ?)', [businessId, eventId]);
   }
 
+
   for (const imageUrl of images) {
+    console.log(imageUrl);
     await db.query('INSERT INTO images (supplier_id, image_url) VALUES (?, ?)', [businessId, imageUrl]);
   }
 

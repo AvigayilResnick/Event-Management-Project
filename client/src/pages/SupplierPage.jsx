@@ -13,11 +13,13 @@ const SupplierPage = () => {
   const [message, setMessage] = useState("");
   const [modalOpen, setModalOpen] = useState(!user);
 
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const data = await getSupplierFullDetails(id); // 🟢 קריאה לפונקציה שמביאה את פרטי הספק
         setSupplier(data);
+        console.log("images", data.images);
       } catch (err) {
         console.error("Failed to load supplier", err);
       }
@@ -45,6 +47,7 @@ const SupplierPage = () => {
   if (!user)
     return <AuthModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />;
   if (!supplier) return <div className="p-6">Loading supplier details...</div>;
+  console.log("IMAGES", supplier.images)
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md">
@@ -58,12 +61,13 @@ const SupplierPage = () => {
       </p>
       <p className="mb-6 text-gray-800">{supplier.description}</p>
 
+      
       {supplier.images?.length > 0 && (
         <div className="grid grid-cols-2 gap-4 mb-6">
           {supplier.images.map((url, i) => (
             <img
               key={i}
-              src={url}
+              src={`http://localhost:5000/uploads/${url}`}
               alt={`Image ${i}`}
               className="rounded-xl w-full object-cover"
             />
