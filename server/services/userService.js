@@ -21,12 +21,12 @@ export async function getUserById(userId) {
 export const updateUserProfile = async (id, data) => {
   const { full_name, phone, email } = data;
 
-  // בדיקה אם אימייל כבר תפוס למשתמש אחר
-  const [[existing]] = await db.query(
-    'SELECT id FROM users WHERE email = ? AND id != ?',
-    [email, id]
-  );
-  if (existing) throw new Error('Email already in use');
+  const [[{ count }]] = await db.query(
+  'SELECT COUNT(*) as count FROM users WHERE email = ? AND id != ?',
+  [email, id]
+);
+if (count > 0) throw new Error('Email already in use');
+
 
   const [result] = await db.query(
     'UPDATE users SET full_name = ?, phone = ?, email = ? WHERE id = ?',
@@ -43,8 +43,7 @@ export const changePasswordService = async (userId, currentPassword, newPassword
   if (!isMatch) throw new Error('Current password incorrect');
 
   const newHash = await bcrypt.hash(newPassword, 10);
-  const result = await updateUserPassword(userId, newHash);
-  return result;
+  return await updateUserPassword(userId, newHash);
 };
 
 export async function updateUserPassword(userId, newHash) {
@@ -53,10 +52,8 @@ export async function updateUserPassword(userId, newHash) {
   return result.affectedRows === 1;
 }
 
-
 export const getUserWithOptionalSupplier = async (userId) => {
-  // שליפת המשתמש
-  const [users] = await pool.query(
+  const [users] = await db.query(
     "SELECT id, full_name, email, phone, role FROM users WHERE id = ?",
     [userId]
   );
@@ -67,9 +64,8 @@ export const getUserWithOptionalSupplier = async (userId) => {
 
   const user = users[0];
 
-  // אם הוא ספק – נחפש את הספק שלו
   if (user.role === "supplier") {
-    const [suppliers] = await pool.query(
+    const [suppliers] = await db.query(
       "SELECT id FROM supplier_profiles WHERE user_id = ?",
       [userId]
     );

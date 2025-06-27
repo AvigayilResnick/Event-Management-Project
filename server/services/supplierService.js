@@ -1,62 +1,84 @@
 import db from '../db/dbConnection.js';
 
 export const createSupplierBusiness = async (userId, data, images) => {
-  console.log("➡️ Going to save:", images);
-  const {
-    business_name,
-    category,
-    description,
-    price_min,
-    price_max,
-    city,
-    event_types
-  } = data;
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
 
-  const parsedEvents = typeof event_types === 'string' ? JSON.parse(event_types) : event_types;
+    const {
+      business_name,
+      category,
+      description,
+      price_min,
+      price_max,
+      city,
+      event_types
+    } = data;
 
-  const [profileResult] = await db.query(
-    `INSERT INTO supplier_profiles 
-    (user_id, business_name, category, description, price_min, price_max, city) 
-    VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [userId, business_name, category, description, price_min, price_max, city]
-  );
+    const parsedEvents = typeof event_types === 'string' ? JSON.parse(event_types) : event_types;
 
-  const businessId = profileResult.insertId;
+    const [profileResult] = await conn.query(
+      `INSERT INTO supplier_profiles 
+       (user_id, business_name, category, description, price_min, price_max, city) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [userId, business_name, category, description, price_min, price_max, city]
+    );
 
-  for (const eventName of parsedEvents) {
-    const [[existingEvent]] = await db.query('SELECT id FROM events WHERE name = ?', [eventName]);
-    const eventId = existingEvent ? existingEvent.id : (await db.query('INSERT INTO events (name) VALUES (?)', [eventName]))[0].insertId;
-    await db.query('INSERT INTO supplier_event_types (supplier_id, event_id) VALUES (?, ?)', [businessId, eventId]);
+    const businessId = profileResult.insertId;
+
+    for (const eventName of parsedEvents) {
+      const [[existingEvent]] = await conn.query('SELECT id FROM events WHERE name = ?', [eventName]);
+      const eventId = existingEvent ? existingEvent.id : (await conn.query(
+        'INSERT INTO events (name) VALUES (?)', [eventName]
+      ))[0].insertId;
+
+      await conn.query(
+        'INSERT INTO supplier_event_types (supplier_id, event_id) VALUES (?, ?)',
+        [businessId, eventId]
+      );
+    }
+
+    for (const imageUrl of images) {
+      await conn.query(
+        'INSERT INTO images (supplier_id, image_url) VALUES (?, ?)',
+        [businessId, imageUrl]
+      );
+    }
+
+    await conn.commit();
+    return businessId;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
   }
-
-
-  for (const imageUrl of images) {
-    console.log(imageUrl);
-    await db.query('INSERT INTO images (supplier_id, image_url) VALUES (?, ?)', [businessId, imageUrl]);
-  }
-
-  return businessId;
 };
 
 export const getAllMyBusinesses = async (userId) => {
   const [profiles] = await db.query(`SELECT * FROM supplier_profiles WHERE user_id = ?`, [userId]);
+  const supplierIds = profiles.map(p => p.id);
+
+  const [events] = supplierIds.length > 0
+    ? await db.query(`
+        SELECT s.supplier_id, e.name 
+        FROM supplier_event_types s 
+        JOIN events e ON s.event_id = e.id 
+        WHERE s.supplier_id IN (?)`, [supplierIds])
+    : [[]];
+
+  const [images] = supplierIds.length > 0
+    ? await db.query(`SELECT id, supplier_id, image_url FROM images WHERE supplier_id IN (?)`, [supplierIds])
+    : [[]];
 
   for (const profile of profiles) {
-    const [events] = await db.query(
-      `SELECT e.name FROM supplier_event_types s
-       JOIN events e ON s.event_id = e.id
-       WHERE s.supplier_id = ?`,
-      [profile.id]
-    );
-
-    const [images] = await db.query('SELECT id, image_url FROM images WHERE supplier_id = ?', [profile.id]);
-
-    profile.event_types = events.map(e => e.name);
-    profile.images = images.map(img => ({ id: img.id, url: img.image_url }));
+    profile.event_types = events.filter(e => e.supplier_id === profile.id).map(e => e.name);
+    profile.images = images.filter(i => i.supplier_id === profile.id).map(i => ({ id: i.id, url: i.image_url }));
   }
 
   return profiles;
 };
+
 
 export const getBusinessById = async (userId, businessId) => {
   const [[profile]] = await db.query(`SELECT * FROM supplier_profiles WHERE id = ? AND user_id = ?`, [businessId, userId]);
