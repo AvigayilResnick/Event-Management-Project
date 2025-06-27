@@ -3,6 +3,84 @@
 import db from '../db/dbConnection.js';
 import nodemailer from 'nodemailer';
 // Get suppliers filtered by search criteria (optional)
+// export async function getSuppliersForHome({
+//   eventName = null,
+//   category = null,
+//   city = null,
+//   priceMin = null,
+//   priceMax = null,
+//   search = null,
+//   sortBy = 'price_min',
+//   sortOrder = 'asc',
+//   limit = 20,
+//   offset = 0
+// }) {
+//   const params = [];
+//   let query = `
+//     SELECT sp.id, sp.business_name,
+//            LEFT(sp.description, 120) AS short_description
+//     FROM supplier_profiles sp
+//   `;
+
+//   // ✳️ צור JOIN רק אם יש eventName
+//   if (eventName) {
+//     query += `
+//       JOIN supplier_event_types setp ON sp.id = setp.supplier_id
+//       JOIN events e ON e.id = setp.event_id
+//     `;
+//   }
+
+//   query += ` WHERE 1=1 `;
+
+//   if (eventName) {
+//     query += ` AND e.name = ? `;
+//     params.push(eventName);
+//   }
+
+//   if (category) {
+//     query += ` AND sp.category = ? `;
+//     params.push(category);
+//   }
+
+//   if (city) {
+//     query += ` AND sp.city = ? `;
+//     params.push(city);
+//   }
+
+//   if (
+//     typeof priceMin === "number" &&
+//     typeof priceMax === "number" &&
+//     !isNaN(priceMin) &&
+//     !isNaN(priceMax)
+//   ) {
+//     query += ` AND sp.price_max >= ? AND sp.price_min <= ? `;
+//     params.push(priceMin, priceMax);
+//   }
+
+//   if (search) {
+//   query += ` AND (LOWER(sp.business_name) LIKE ? OR LOWER(sp.description) LIKE ?) `;
+//   const safeSearch = `%${search.toLowerCase()}%`;
+//   params.push(safeSearch, safeSearch);
+// }
+
+
+//   query += ` GROUP BY sp.id `;
+
+//   if (sortBy === 'average_price') {
+//     query += ` ORDER BY (sp.price_min + sp.price_max) / 2 ${sortOrder.toUpperCase()} `;
+//   } else {
+//     query += ` ORDER BY sp.${sortBy} ${sortOrder.toUpperCase()} `;
+//   }
+
+//   query += ` LIMIT ? OFFSET ? `;
+//   params.push(limit, offset);
+
+ 
+
+//   const [rows] = await db.query(query, params);
+//   return rows;
+// }
+
 export async function getSuppliersForHome({
   eventName = null,
   category = null,
@@ -17,13 +95,20 @@ export async function getSuppliersForHome({
 }) {
   const params = [];
   let query = `
-    SELECT sp.id, sp.business_name,
-           LEFT(sp.description, 120) AS short_description
+    SELECT sp.id,
+           ANY_VALUE(sp.business_name) AS business_name,
+           ANY_VALUE(LEFT(sp.description, 120)) AS short_description,
+           ANY_VALUE(sp.city) AS city,
+           ANY_VALUE(sp.price_min) AS price_min,
+           ANY_VALUE(sp.price_max) AS price_max
     FROM supplier_profiles sp
   `;
 
-  // ✳️ צור JOIN רק אם יש eventName
-  if (eventName) {
+  const validEventName =
+    eventName && eventName.trim() !== "" && eventName.toLowerCase() !== "all";
+
+  // הצטרפות לטבלת אירועים רק אם נבחר event אמיתי
+  if (validEventName) {
     query += `
       JOIN supplier_event_types setp ON sp.id = setp.supplier_id
       JOIN events e ON e.id = setp.event_id
@@ -32,7 +117,7 @@ export async function getSuppliersForHome({
 
   query += ` WHERE 1=1 `;
 
-  if (eventName) {
+  if (validEventName) {
     query += ` AND e.name = ? `;
     params.push(eventName);
   }
@@ -58,12 +143,15 @@ export async function getSuppliersForHome({
   }
 
   if (search) {
-    query += ` AND (sp.business_name LIKE ? OR sp.description LIKE ?) `;
-    params.push(`%${search}%`, `%${search}%`);
+    query += ` AND (LOWER(sp.business_name) LIKE ? OR LOWER(sp.description) LIKE ?) `;
+    const safeSearch = `%${search.toLowerCase()}%`;
+    params.push(safeSearch, safeSearch);
   }
 
+  // קיבוץ לפי ספק
   query += ` GROUP BY sp.id `;
 
+  // מיון
   if (sortBy === 'average_price') {
     query += ` ORDER BY (sp.price_min + sp.price_max) / 2 ${sortOrder.toUpperCase()} `;
   } else {
@@ -72,8 +160,6 @@ export async function getSuppliersForHome({
 
   query += ` LIMIT ? OFFSET ? `;
   params.push(limit, offset);
-
- 
 
   const [rows] = await db.query(query, params);
   return rows;

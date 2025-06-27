@@ -56,7 +56,7 @@ app.use('/api/messages', messageRoutes); // Uncomment if you have message routes
 
 
 const hashedPassword = await bcrypt.hash("newPassword123", 10);
-console.log(hashedPassword);
+console.log("Hashed Password:", hashedPassword);
 // Error handling middleware
 
 // Start the server on a specified port or default to 5000
