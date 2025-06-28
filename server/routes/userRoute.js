@@ -5,7 +5,7 @@ import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/myInfo', authMiddleware, getMyProfile);
+router.get('/myInfo', authMiddleware,getMyProfile);
 router.put('/myInfo', authMiddleware, updateMyProfile);
 router.post('/change-password', authMiddleware, changePasswordController);
 //router.get('/myInfoForRefresh', authMiddleware, getMyInfo);

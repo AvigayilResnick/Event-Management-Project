@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   getAllSuppliers,
@@ -7,7 +6,7 @@ import {
 } from "../api/client";
 import SupplierCard from "../components/SupplierCard";
 import PriceRangeSlider from "../components/PriceRangeSlider";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { debounce } from "lodash";
 
 const SupplierList = ({ preSelectedEvent = "" }) => {
@@ -18,6 +17,8 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
   const [maxPriceInDB, setMaxPriceInDB] = useState(10000);
   const [searchParams, setSearchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
+  const location = useLocation(); // ✅ נוספה התמיכה בשינוי כתובת
+
   const observer = useRef();
   const abortControllerRef = useRef(null);
   const initialLoadRef = useRef(true);
@@ -101,12 +102,13 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
     setSearchParams(filters);
   }, [filters, setSearchParams]);
 
+  // ✅ ריסט אחרי שינוי סינון או כתובת (כולל /suppliers?refresh=1)
   useEffect(() => {
     setSuppliers([]);
     setOffset(0);
     setHasMore(true);
     initialLoadRef.current = true;
-  }, [debouncedFilters]);
+  }, [debouncedFilters, location.search]);
 
   useEffect(() => {
     if (!hasMore) return;
@@ -201,14 +203,12 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
 
   return (
     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-8 px-4">
-      {/* aside for desktop */}
       <aside className="bg-white p-6 rounded-xl shadow sticky top-4 overflow-visible hidden lg:block">
         <h3 className="text-lg font-semibold mb-4 text-pink-600">Filter Suppliers</h3>
         {renderFilterForm()}
       </aside>
 
       <section className="lg:col-span-3">
-        {/* filter toggle button for mobile */}
         <button
           onClick={() => setShowFilters((prev) => !prev)}
           className="lg:hidden px-4 py-2 bg-pink-500 text-white rounded-md mb-4"
@@ -216,7 +216,6 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
           {showFilters ? "Hide Filters" : "Show Filters"}
         </button>
 
-        {/* mobile filters */}
         {showFilters && (
           <aside className="bg-white p-6 rounded-xl shadow mb-4 lg:hidden">
             <h3 className="text-lg font-semibold mb-4 text-pink-600">Filter Suppliers</h3>
@@ -290,3 +289,5 @@ const SupplierList = ({ preSelectedEvent = "" }) => {
 };
 
 export default SupplierList;
+// This component displays a list of suppliers with filtering options.
+// It allows users to filter by event type, category, city, price range, and search

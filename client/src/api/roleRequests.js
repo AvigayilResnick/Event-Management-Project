@@ -18,8 +18,12 @@ export const requestToBecomeSupplier = async () => {
   const response = await apiClient.post("/roles/request", {requested_role: "supplier"});
   return response.data;
 };
-// שליפת בקשת תפקיד אחת לפי המשתמש
-export const getMyRoleRequest = async () => {
-  const response = await apiClient.get("/roles/my-request");
-  return response.data; // { status, requested_role } או 404 אם אין
+// // שליפת בקשת תפקיד אחת לפי המשתמש
+// export const getMyRoleRequest = async () => {
+//   const response = await apiClient.get("/roles/my-request");
+//   return response.data; // { status, requested_role } או 404 אם אין
+// };
+export const getRoleRequestStatus = async () => {
+  const response = await apiClient.get("/roles/status");
+  return response.data; // { status: "pending" | "approved" | "rejected" | null }
 };

@@ -1,6 +1,5 @@
 import express from 'express';
 import { authMiddleware } from '../middleware/authMiddleware.js';
-import { authorizeClientOnly } from '../middleware/roleMiddleware.js';
 import {
   getSuppliers,
   getSupplierFullDetails,
@@ -11,7 +10,6 @@ import {
 
 const router = express.Router();
 
-router.get('/events', getAllEvents);
 
 // GET /api/client/suppliers?eventName=...&limit=...&offset=...
 router.get('/suppliers', getSuppliers);
@@ -21,7 +19,7 @@ router.get('/suppliers/full/:id', authMiddleware, getSupplierFullDetails);
 
 router.get('/categories', getCategories);
 router.get("/max-price", getMaxSupplierPrice);
-
+router.get('/events', getAllEvents);
 
 
 

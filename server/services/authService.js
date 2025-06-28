@@ -42,20 +42,35 @@ if (count > 0) throw new Error('Email already in use');
 };
 
 export const login = async (email, password) => {
-  const [[user]] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-  if (!user) throw new Error('User not found');
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
 
-  const [[passRecord]] = await db.query('SELECT * FROM passwords WHERE user_id = ?', [user.id]);
-  const isMatch = await bcrypt.compare(password, passRecord.password_hash);
-  if (!isMatch) throw new Error('Invalid password');
+    const [[user]] = await conn.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (!user) throw new Error('User not found');
 
-  const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: '2h',
-  });
+    const [[passRecord]] = await conn.query('SELECT * FROM passwords WHERE user_id = ?', [user.id]);
+    if (!passRecord) throw new Error('Password record not found');
 
-  const { full_name, email: userEmail, phone, role } = user;
-  return {
-    token,
-    user: { full_name, email: userEmail, phone, role }
-  };
+    const isMatch = await bcrypt.compare(password, passRecord.password_hash);
+    if (!isMatch) throw new Error('Invalid password');
+
+    await conn.commit();
+
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: '2h',
+    });
+
+    const { full_name, email: userEmail, phone, role } = user;
+    return {
+      token,
+      user: { full_name, email: userEmail, phone, role }
+    };
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 };
+

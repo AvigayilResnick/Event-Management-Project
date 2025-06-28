@@ -11,7 +11,14 @@ export const loginValidationRules = [
   body('password').notEmpty().withMessage('Password is required')
 ];
 
-
+export const ratingValidationRules = [
+  body("rating")
+    .isInt({ min: 1, max: 5 })
+    .withMessage("Rating must be between 1 and 5"),
+  body("supplierId")
+    .isInt({ gt: 0 })
+    .withMessage("Supplier ID must be a positive integer")
+];
 
 
 
