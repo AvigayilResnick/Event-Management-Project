@@ -10,6 +10,8 @@ const EditSupplierPage = () => {
   const { id } = useParams();
 
   const handleDeleteImage = async (imageId) => {
+    const confirmed = window.confirm("Are you sure you want to delete this image?");
+    if (!confirmed) return;
     try {
       await apiClient.delete(`/suppliers/images/${imageId}`);
       setForm((prev) => ({
@@ -25,7 +27,7 @@ const EditSupplierPage = () => {
     const fetchData = async () => {
       try {
         const res = await apiClient.get(`/suppliers/supplier-profile/${id}`);
-        setForm(res.data);
+        setForm({ ...res.data, newImages: [] });
       } catch (err) {
         alert("Error loading page");
       }
@@ -42,8 +44,27 @@ const EditSupplierPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await apiClient.put(`/suppliers/supplier-profile/${id}`, form);
+      const formData = new FormData();
+      formData.append("business_name", form.business_name);
+      formData.append("category", form.category);
+      formData.append("city", form.city);
+      formData.append("price_min", form.price_min);
+      formData.append("price_max", form.price_max);
+      formData.append("description", form.description);
+
+      // הוספת תמונות חדשות אם קיימות
+      if (form.newImages && form.newImages.length > 0) {
+        Array.from(form.newImages).forEach((file) => {
+          formData.append("images", file);
+        });
+      }
+
+      await apiClient.put(`/suppliers/supplier-profile/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       alert("Page updated successfully");
       navigate("/supplier-dashboard");
     } catch (err) {
@@ -63,6 +84,7 @@ const EditSupplierPage = () => {
         <input name="price_min" value={form.price_min} onChange={handleChange} className="border p-2 rounded" placeholder="Minimum Price" />
         <input name="price_max" value={form.price_max} onChange={handleChange} className="border p-2 rounded" placeholder="Maximum Price" />
         <textarea name="description" value={form.description} onChange={handleChange} className="border p-2 rounded" rows={4} placeholder="Description" />
+
         <div className="grid grid-cols-2 gap-4">
           {form.images?.map((img) => (
             <div key={img.id} className="relative">
@@ -82,6 +104,7 @@ const EditSupplierPage = () => {
             </div>
           ))}
         </div>
+
         <input
           type="file"
           multiple
@@ -89,6 +112,7 @@ const EditSupplierPage = () => {
           onChange={(e) => setForm({ ...form, newImages: e.target.files })}
           className="border p-2 rounded"
         />
+
         <button type="submit" className="bg-pink-500 text-white py-2 rounded hover:bg-pink-600">Save</button>
       </form>
     </div>
@@ -96,5 +120,3 @@ const EditSupplierPage = () => {
 };
 
 export default EditSupplierPage;
-//       <ProtectedRoute>
-//               <EditSupplierPage />

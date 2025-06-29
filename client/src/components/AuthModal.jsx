@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { signup, login } from "../api/auth";
 import { AuthContext } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom"; // ✅ נוסיף את זה אם נרצה להשתמש ב-navigate
 
 const AuthModal = ({ isOpen, onClose }) => {
   const { login: doLogin } = useContext(AuthContext);
@@ -12,11 +13,27 @@ const AuthModal = ({ isOpen, onClose }) => {
     phone: "",
   });
   const [error, setError] = useState("");
+  const navigate = useNavigate(); // ✅ מאפשר לנו להשתמש בניווט פנימי
 
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  // ✅ פונקציה מסודרת לשימוש חוזר
+  const handleRedirectAfterLogin = (role) => {
+    const redirect = localStorage.getItem("redirectAfterLogin");
+    if (redirect) {
+      localStorage.removeItem("redirectAfterLogin");
+      navigate(redirect); // ✅ משתמשים ב-react-router navigate
+    } else if (role === "admin") {
+      navigate("/admin/requests");
+    } else if (role === "supplier") {
+      navigate("/supplier-dashboard");
+    } else {
+      navigate("/");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -28,20 +45,20 @@ const AuthModal = ({ isOpen, onClose }) => {
           : await login({ email: form.email, password: form.password });
 
       doLogin(data.user, data.token);
+      setForm({
+        full_name: "",
+        email: "",
+        password: "",
+        phone: "",
+      });
+      if (error) setError("");
       onClose();
 
-      // ✅ ניתוב חכם אחרי התחברות
-      const redirect = localStorage.getItem("redirectAfterLogin");
-      if (redirect) {
-        localStorage.removeItem("redirectAfterLogin");
-        window.location.href = redirect;
-      } else if (data.user.role === "supplier") {
-        window.location.href = "/supplier-dashboard";
-      }
+      // ✅ ניתוב אחרי התחברות
+      handleRedirectAfterLogin(data.user.role);
 
     } catch (err) {
       setError(err.response?.data?.message || "Something went wrong");
-      setForm((prev) => ({ ...prev, password: "" }));
     }
   };
 
@@ -49,7 +66,15 @@ const AuthModal = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md relative">
         <button
-          onClick={onClose}
+          onClick={() => {
+            onClose();
+            setForm({
+              full_name: "",
+              email: "",
+              password: "",
+              phone: "",
+            });
+          }}
           className="absolute top-4 right-4 text-xl font-bold text-gray-500"
         >
           ✕

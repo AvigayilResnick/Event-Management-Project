@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthContext } from "./contexts/AuthContext";
 import AuthModal from "./components/AuthModal";
 import Home from "./pages/Home";
@@ -9,18 +9,36 @@ import EditUserProfile from "./pages/EditUserProfile";
 import EditSupplierPage from "./pages/EditSupplierPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
-
 import About from "./pages/About";
 import BecomeSupplierRequest from "./components/BecomeSupplierRequest";
 import SupplierList from "./pages/SupplierList";
 import SupplierDashboard from "./pages/SupplierDashboard";
 import MyProfile from "./pages/MyProfile";
 import ChangePassword from "./pages/ChangePassword";
-import RoleRequestsPage from "./pages/RoleRequestsPage"; // ✅ חדש
+import RoleRequestsPage from "./pages/RoleRequestsPage";
 
 function App() {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [showModal, setShowModal] = useState(!user);
+
+  // 🔒 חוסם BACK אם המשתמש לא מחובר
+  useEffect(() => {
+    if (!user) {
+      console.log("🔒 Blocking back navigation because user is not logged in");
+      window.history.pushState(null, "", window.location.href);
+      window.history.pushState(null, "", window.location.href);
+      const handleBack = () => {
+        console.log("🔙 BACK detected → redirecting to home");
+        navigate("/", { replace: true });
+      };
+      window.onpopstate = handleBack;
+
+      return () => {
+        window.onpopstate = null;
+      };
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const handleOpenAuthModal = () => setShowModal(true);
@@ -35,11 +53,10 @@ function App() {
   }, [user]);
 
   return (
-    <Router>
+    <>
       <Navbar />
       <AuthModal isOpen={showModal} onClose={() => setShowModal(false)} />
       <Routes>
-        {/* ציבורי */}
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/suppliers" element={<SupplierList />} />
@@ -51,8 +68,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* ספקים בלבד */}
         <Route
           path="/create-supplier"
           element={
@@ -77,8 +92,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* פרופיל משתמש (רגיל או ספק) */}
         <Route
           path="/profile"
           element={
@@ -103,8 +116,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* בקשת מעבר לספק */}
         <Route
           path="/become-supplier"
           element={
@@ -113,8 +124,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* מנהלים בלבד */}
         <Route
           path="/admin/requests"
           element={
@@ -124,7 +133,7 @@ function App() {
           }
         />
       </Routes>
-    </Router>
+    </>
   );
 }
 

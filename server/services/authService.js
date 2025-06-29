@@ -37,11 +37,11 @@ export const signup = async ({ full_name, email, phone, password, role = 'client
 
 export const login = async (email, password) => {
   const [[user]] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-  if (!user) throw new Error('User not found');
+  if (!user) throw new Error('Invalid email or password');
 
   const [[passRecord]] = await db.query('SELECT * FROM passwords WHERE user_id = ?', [user.id]);
   const isMatch = await bcrypt.compare(password, passRecord.password_hash);
-  if (!isMatch) throw new Error('Invalid password');
+  if (!isMatch) throw new Error('Invalid email or password');
 
   const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: '2h',

@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { createSupplierPage } from "../api/supplier";
 import { getAllEvents, getAllCategories } from "../api/client";
 
@@ -85,7 +85,8 @@ const CreateSupplierPage = () => {
     }
   };
 
-  if (!user || user.role !== "supplier") return <div>You do not have access to this page.</div>;
+  
+  if (!user) return <Navigate to="/" />;
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-white shadow rounded">

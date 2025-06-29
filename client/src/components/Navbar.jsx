@@ -1,8 +1,9 @@
 import React, { useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../contexts/AuthContext";
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const { user, logout } = useContext(AuthContext);
 
   return (
@@ -42,7 +43,10 @@ const Navbar = () => {
           <>
             <span className="text-sm text-gray-700">Hello, {user.full_name}</span>
             <button
-              onClick={logout}
+              onClick={() => {
+                logout();
+                navigate("/", { replace: true });
+              }}
               className="text-sm text-pink-600 hover:underline"
             >
               Logout
