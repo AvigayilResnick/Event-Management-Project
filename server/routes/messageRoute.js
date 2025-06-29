@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post(
   '/send-message',
-  authMiddleware,           
+  authMiddleware,          
   messageValidationRules(),
   validate,
   postMessage

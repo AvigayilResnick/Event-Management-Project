@@ -1,26 +1,24 @@
-import db from '../db.js';
+import db from '../db/dbConnection.js';
 
-export const addRating = async (userId, supplierId, rating) => {
-  const [existing] = await db.query(
-    'SELECT id FROM ratings WHERE user_id = ? AND supplier_id = ?',
-    [userId, supplierId]
-  );
-
-  if (existing.length > 0) {
-    throw new Error("You already rated this supplier.");
-  }
-
+export const saveRating = async ({ userId, supplierId, rating }) => {
   await db.query(
-    'INSERT INTO ratings (user_id, supplier_id, rating) VALUES (?, ?, ?)',
+    `INSERT INTO ratings (user_id, supplier_id, rating) VALUES (?, ?, ?)`,
     [userId, supplierId, rating]
   );
 };
 
 export const getSupplierRating = async (supplierId) => {
-  const [rows] = await db.query(
-    'SELECT AVG(rating) as average, COUNT(*) as total FROM ratings WHERE supplier_id = ?',
-    [supplierId]
-  );
+  const [[data]] = await db.query(`
+    SELECT 
+      ROUND(AVG(rating), 2) AS average,
+      COUNT(*) AS total
+    FROM ratings
+    WHERE supplier_id = ?
+  `, [supplierId]);
 
-  return rows[0]; // { average: ..., total: ... }
+  return {
+    average: data?.average || 0,
+    total: data?.total || 0
+  };
 };
+

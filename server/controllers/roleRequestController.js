@@ -46,13 +46,13 @@ export const handleRequest = async (req, res) => {
   }
 };
 
-export const getMyRoleRequest = async (req, res) => {
-  const userId = req.user.id;
+
+export const getMyRoleRequestStatus = async (req, res) => {
   try {
-    const request = await roleRequestService.getUserRoleRequest(userId);
-    if (!request) return res.status(404).json({ message: "No request found" });
-    res.json(request);
+    const status = await roleRequestService.getRoleRequestStatusService(req.user.id);
+    res.json({ status }); // "pending", "approved", "rejected", or null
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Error checking role status:", err.message);
+    res.status(500).json({ message: "Server error" });
   }
 };

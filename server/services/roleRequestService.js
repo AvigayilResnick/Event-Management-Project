@@ -94,3 +94,14 @@ export const getUserRoleRequest = async (userId) => {
   );
   return rows[0] || null;
 };
+export const getRoleRequestStatusService = async (userId) => {
+  const [rows] = await db.query(`
+    SELECT status 
+    FROM role_requests 
+    WHERE user_id = ? 
+    ORDER BY request_date DESC 
+    LIMIT 1
+  `, [userId]);
+
+  return rows.length ? rows[0].status : null;
+};

@@ -39,10 +39,31 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  };
+
+  const refreshAuthToken = async () => {
+    try {
+      const response = await fetch("/api/auth/refresh", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error("Failed to refresh token");
+
+      const { token: newToken } = await response.json();
+      const decoded = JSON.parse(atob(newToken.split(".")[1]));
+
+      setToken(newToken);
+      setUser({ id: decoded.id, role: decoded.role });
+    } catch (error) {
+      console.error("Error refreshing token:", error);
+      logout();
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, refreshAuthToken }}>
       {children}
     </AuthContext.Provider>
   );

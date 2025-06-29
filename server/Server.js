@@ -16,7 +16,7 @@ import userRoutes from './routes/userRoute.js';
 import roleRequestRoutes from './routes/roleRequestRoute.js';
 import supplierRoutes from './routes/supplierRoute.js';
 import messageRoutes from './routes/messageRoute.js'; // Uncomment if you have message routes
-
+import ratingRoutes from './routes/ratingRoute.js';
 dotenv.config();
 const app = express();
 
@@ -53,6 +53,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/roles', roleRequestRoutes);
 app.use('/api/suppliers',  supplierRoutes);
 app.use('/api/messages', messageRoutes); // Uncomment if you have message routes
+app.use('/api/ratings', ratingRoutes);
 
 
 const hashedPassword = await bcrypt.hash("newPassword123", 10);

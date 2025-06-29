@@ -26,8 +26,8 @@ const CreateSupplierPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const categories = await getAllCategories(); // [{ category: "Photography" }]
-        const events = await getAllEvents();         // ["Wedding", "Birthday"]
+        const categories = await getAllCategories();
+        const events = await getAllEvents();
         setAllCategories(categories);
         setAllEvents(events);
       } catch (err) {
@@ -78,7 +78,7 @@ const CreateSupplierPage = () => {
     try {
       await createSupplierPage(data);
       alert("Page created successfully");
-      navigate("/supplier-dashboard");
+      navigate("/supplier-dashboard"); // ⬅️ חזרנו לניווט המקורי
     } catch (err) {
       console.error(err);
       alert("Error creating page");
@@ -100,7 +100,6 @@ const CreateSupplierPage = () => {
           required
         />
 
-        {/* Category dropdown + custom input */}
         <select
           name="category"
           className="border p-2 rounded"
@@ -133,6 +132,7 @@ const CreateSupplierPage = () => {
           onChange={handleChange}
           required
         />
+
         <input
           name="price_min"
           type="number"
@@ -141,6 +141,7 @@ const CreateSupplierPage = () => {
           onChange={handleChange}
           required
         />
+
         <input
           name="price_max"
           type="number"
@@ -149,6 +150,7 @@ const CreateSupplierPage = () => {
           onChange={handleChange}
           required
         />
+
         <textarea
           name="description"
           placeholder="Description"
@@ -158,11 +160,12 @@ const CreateSupplierPage = () => {
           required
         />
 
-        {/* Events dropdown + tags + custom */}
         <select onChange={handleEventSelect} className="border p-2 rounded">
           <option value="">Add Event Type</option>
           {allEvents.map((event) => (
-            <option key={event} value={event}>{event}</option>
+            <option key={event} value={event}>
+              {event}
+            </option>
           ))}
         </select>
 
@@ -191,6 +194,7 @@ const CreateSupplierPage = () => {
         />
 
         <input type="file" multiple onChange={handleFileChange} />
+
         <button
           type="submit"
           className="bg-pink-500 text-white py-2 rounded hover:bg-pink-600"
@@ -203,5 +207,3 @@ const CreateSupplierPage = () => {
 };
 
 export default CreateSupplierPage;
-// import React, { useState, useContext, useEffect } from "react";
-// import { AuthContext } from "../contexts/AuthContext";

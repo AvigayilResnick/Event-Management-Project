@@ -2,6 +2,7 @@
 
 import db from '../db/dbConnection.js';
 import nodemailer from 'nodemailer';
+import { getSupplierRating } from './ratingService.js'; 
 // Get suppliers filtered by search criteria (optional)
 // export async function getSuppliersForHome({
 //   eventName = null,
@@ -294,17 +295,22 @@ export async function getSupplierEvents(supplierId) {
 }
 
 // פונקציה ראשית שמשלבת את כולם
+
+
 export async function getSupplierDetails(supplierId) {
   const supplier = await getSupplierBasicInfo(supplierId);
   if (!supplier) return null;
 
   const images = await getSupplierImages(supplierId);
   const events = await getSupplierEvents(supplierId);
+  const ratingData = await getSupplierRating(supplierId); // ✅ חדש
 
   return {
     ...supplier,
-    images,
+    images,       // ['image1.jpg', 'image2.jpg']
     events,
+    average_rating: ratingData.average,
+    total_ratings: ratingData.total
   };
 }
 
@@ -337,11 +343,18 @@ export async function requestSupplier(userId) {
 
 
 export async function getAllCategories() {
-  const [rows] = await db.query(`
-    SELECT DISTINCT category
-    FROM supplier_categories
-    ORDER BY category
-  `);
-  return rows;
+  try {
+    const [rows] = await db.query(`
+      SELECT DISTINCT category
+      FROM supplier_profiles
+      WHERE category IS NOT NULL AND category <> ''
+      ORDER BY category
+    `);
+    return rows; // מחזיר כמו: [{ category: "DJ" }, { category: "Flowers" }, ...]
+  } catch (err) {
+    console.error("❌ Error fetching categories:", err.message);
+    throw new Error("Failed to load categories");
+  }
 }
+
 

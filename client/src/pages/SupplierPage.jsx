@@ -5,6 +5,7 @@ import { AuthContext } from "../contexts/AuthContext";
 import { getSupplierFullDetails } from "../api/client"; // 🟢 שימוש בפונקציה הנכונה
 import { sendMessage } from "../api/message";
 import AuthModal from "../components/AuthModal";
+import RatingStars from "../components/RatingStars";
 
 const SupplierPage = () => {
   const { user } = useContext(AuthContext);
@@ -51,29 +52,40 @@ const SupplierPage = () => {
 
   return (
     <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md">
-      <h1 className="text-3xl font-bold text-pink-600 mb-4">
-        {supplier.business_name}
-      </h1>
-      <p className="text-gray-700 mb-2">Category: {supplier.category}</p>
-      <p className="text-gray-700 mb-2">City: {supplier.city}</p>
-      <p className="text-gray-700 mb-4">
-        Price Range: {supplier.price_min} - {supplier.price_max} ₪
-      </p>
-      <p className="mb-6 text-gray-800">{supplier.description}</p>
+ <h1 className="text-3xl font-bold text-pink-600 mb-4">
+  {supplier.business_name}
+</h1>
+<RatingStars supplierId={supplier.id} userId={user.id} />
 
-      
-      {supplier.images?.length > 0 && (
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {supplier.images.map((url, i) => (
-            <img
-              key={i}
-              src={`http://localhost:5000/uploads/${url}`}
-              alt={`Image ${i}`}
-              className="rounded-xl w-full object-cover"
-            />
-          ))}
-        </div>
-      )}
+<p className="text-gray-700 mb-2">Category: {supplier.category}</p>
+<p className="text-gray-700 mb-2">City: {supplier.city}</p>
+<p className="text-gray-700 mb-4">
+  Price Range: {supplier.price_min} - {supplier.price_max} ₪
+</p>
+
+{/* דירוגים */}
+{supplier.average_rating > 0 && (
+  <div className="text-yellow-600 text-lg font-medium mb-4">
+    ⭐ {supplier.average_rating} / 5 ({supplier.total_ratings} ratings)
+  </div>
+)}
+
+<p className="mb-6 text-gray-800">{supplier.description}</p>
+
+{/* תמונות */}
+{supplier.images?.length > 0 && (
+  <div className="grid grid-cols-2 gap-4 mb-6">
+    {supplier.images.map((url, i) => (
+      <img
+        key={i}
+        src={`http://localhost:5000/uploads/${url}`}
+        alt={`Image ${i}`}
+        className="rounded-xl w-full object-cover"
+      />
+    ))}
+  </div>
+)}
+
 
       <h2 className="text-xl font-semibold mb-2">Contact the supplier:</h2>
       <textarea
