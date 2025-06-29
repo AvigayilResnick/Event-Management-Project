@@ -85,6 +85,17 @@ CREATE TABLE role_requests (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE ratings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  supplier_id INT NOT NULL,
+  rating INT CHECK (rating BETWEEN 1 AND 5),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_rating (user_id, supplier_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (supplier_id) REFERENCES supplier_profiles(id) ON DELETE CASCADE
+);
+
 
 
 -- 1 Admin

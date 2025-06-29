@@ -296,22 +296,31 @@ export async function getSupplierEvents(supplierId) {
 
 // פונקציה ראשית שמשלבת את כולם
 
-
 export async function getSupplierDetails(supplierId) {
-  const supplier = await getSupplierBasicInfo(supplierId);
-  if (!supplier) return null;
+  try {
+    console.log("🔍 Getting supplier details for ID:", supplierId);
 
-  const images = await getSupplierImages(supplierId);
-  const events = await getSupplierEvents(supplierId);
-  const ratingData = await getSupplierRating(supplierId); // ✅ חדש
+    const supplier = await getSupplierBasicInfo(supplierId);
+    if (!supplier) {
+      console.warn("⚠️ No supplier found for ID:", supplierId);
+      return null;
+    }
 
-  return {
-    ...supplier,
-    images,       // ['image1.jpg', 'image2.jpg']
-    events,
-    average_rating: ratingData.average,
-    total_ratings: ratingData.total
-  };
+    const images = await getSupplierImages(supplierId);
+    const events = await getSupplierEvents(supplierId);
+    const ratingData = await getSupplierRating(supplierId);
+
+    return {
+      ...supplier,
+      images,
+      events,
+      average_rating: ratingData.average,
+      total_ratings: ratingData.total
+    };
+  } catch (err) {
+    console.error("❌ Error in getSupplierDetails:", err);
+    throw err; // כדי שהשרת יחזיר 500 עם שגיאה מפורטת
+  }
 }
 
 export async function requestSupplier(userId) {
